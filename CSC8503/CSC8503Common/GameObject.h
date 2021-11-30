@@ -14,7 +14,7 @@ namespace NCL {
 
 		class GameObject	{
 		public:
-			GameObject(string name = "");
+			GameObject(int layer, string name = "");
 			~GameObject();
 
 			void SetBoundingVolume(CollisionVolume* vol) {
@@ -40,6 +40,8 @@ namespace NCL {
 			PhysicsObject* GetPhysicsObject() const {
 				return physicsObject;
 			}
+
+			virtual void Update(float dt) {}
 
 			void SetRenderObject(RenderObject* newObject) {
 				renderObject = newObject;
@@ -82,6 +84,7 @@ namespace NCL {
 
 			bool	isActive;
 			int		worldID;
+			int layer;
 			string	name;
 
 			Vector3 broadphaseAABB;

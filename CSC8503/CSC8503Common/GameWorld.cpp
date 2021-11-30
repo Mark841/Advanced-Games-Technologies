@@ -68,6 +68,11 @@ void GameWorld::UpdateWorld(float dt) {
 	if (shuffleConstraints) {
 		std::random_shuffle(constraints.begin(), constraints.end());
 	}
+
+	for (GameObject* g : gameObjects)
+	{
+		g->Update(dt);
+	}
 }
 
 bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObject) const {
@@ -103,9 +108,7 @@ bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObje
 }
 
 
-/*
-Constraint Tutorial Stuff
-*/
+// Constraint Tutorial Stuff
 
 void GameWorld::AddConstraint(Constraint* c) {
 	constraints.emplace_back(c);
