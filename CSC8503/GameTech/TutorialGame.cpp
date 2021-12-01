@@ -288,7 +288,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	GameObject* sphere = new GameObject(2);
 
 	Vector3 sphereSize = Vector3(radius, radius, radius);
-	SphereVolume* volume = new SphereVolume(radius);
+	SphereVolume* volume = new SphereVolume(true, radius);
 	sphere->SetBoundingVolume((CollisionVolume*)volume);
 
 	sphere->GetTransform()
@@ -299,7 +299,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
 
 	sphere->GetPhysicsObject()->SetInverseMass(inverseMass);
-	sphere->GetPhysicsObject()->InitSphereInertia();
+	sphere->GetPhysicsObject()->InitSphereInertia(volume->GetHollow());
 
 	world->AddGameObject(sphere);
 
@@ -420,7 +420,7 @@ GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
 
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);
-	character->GetPhysicsObject()->InitSphereInertia();
+	character->GetPhysicsObject()->InitSphereInertia(false);
 
 	world->AddGameObject(character);
 
@@ -446,7 +446,7 @@ GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
 	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
 
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);
-	character->GetPhysicsObject()->InitSphereInertia();
+	character->GetPhysicsObject()->InitSphereInertia(false);
 
 	world->AddGameObject(character);
 
@@ -466,7 +466,7 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
 
 	apple->GetPhysicsObject()->SetInverseMass(1.0f);
-	apple->GetPhysicsObject()->InitSphereInertia();
+	apple->GetPhysicsObject()->InitSphereInertia(false);
 
 	world->AddGameObject(apple);
 
@@ -584,20 +584,20 @@ void TutorialGame::MoveSelectedObject() {
 		if (world->Raycast(ray, closestCollision, true))
 		{
 			if (closestCollision.node == selectionObject)
-				selectionObject->GetPhysicsObject()->AddForce(ray.GetDirection() * forceMagnitude);
+				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
 		}
 	}
 
-	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::W)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(1,0,0) * forceMagnitude);
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::UP)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * forceMagnitude/5);
 	}
-	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::A)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * forceMagnitude);
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::LEFT)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * forceMagnitude/5);
 	}
-	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::S)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * forceMagnitude);
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::DOWN)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * forceMagnitude/5);
 	}
-	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::D)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * forceMagnitude);
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::RIGHT)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * forceMagnitude/5);
 	}
 }

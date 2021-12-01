@@ -5,8 +5,9 @@ namespace NCL {
 	class SphereVolume : CollisionVolume
 	{
 	public:
-		SphereVolume(float sphereRadius = 1.0f) {
+		SphereVolume(bool hollowSphere = false, float sphereRadius = 1.0f) {
 			type	= VolumeType::Sphere;
+			hollow = hollowSphere;
 			radius	= sphereRadius;
 		}
 		~SphereVolume() {}
@@ -14,8 +15,12 @@ namespace NCL {
 		float GetRadius() const {
 			return radius;
 		}
+		bool GetHollow() const {
+			return hollow;
+		}
 	protected:
-		float	radius;
+		float	radius; 
+		bool	hollow;
 	};
 }
 
