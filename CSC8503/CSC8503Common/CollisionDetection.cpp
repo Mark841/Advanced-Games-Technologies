@@ -113,12 +113,24 @@ bool CollisionDetection::RayOBBIntersection(const Ray&r, const Transform& worldT
 }
 
 bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& worldTransform, const CapsuleVolume& volume, RayCollision& collision) {
-	//Vector3 capsulePos = worldTransform.GetPosition();
-	//float halfHeight = volume.GetHalfHeight();
-	//float radius = volume.GetRadius();
+	Quaternion orientation = worldTransform.GetOrientation();
+	Vector3 position = worldTransform.GetPosition();
+	float halfHeight = volume.GetHalfHeight() + (volume.GetRadius() * 2);
 
-	//return RayPlaneIntersection(r, , collision);
-	return false;
+	Matrix3 transform = Matrix3(orientation);
+	Matrix3 invTransform = Matrix3(orientation.Conjugate());
+
+	Vector3 localRayPos = r.GetPosition() - position;
+
+	Ray tempRay(invTransform * localRayPos, invTransform * r.GetDirection());
+	Plane capsulePlane = Plane(position, halfHeight, true);
+
+	bool collided = RayPlaneIntersection(r, capsulePlane, collision);
+
+	if (collided)
+		collision.collidedAt = transform * collision.collidedAt + position;
+
+	return collided;
 }
 
 bool CollisionDetection::RaySphereIntersection(const Ray&r, const Transform& worldTransform, const SphereVolume& volume, RayCollision& collision) {
