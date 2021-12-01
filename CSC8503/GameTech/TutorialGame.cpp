@@ -514,8 +514,9 @@ bool TutorialGame::SelectObject() {
 				Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Vector4(1, 0, 0, 1), 10);
 
 				Vector3 position = selectionObject->GetTransform().GetPosition();
-				/*if (selectionObject->GetBoundingVolume()->type == VolumeType::Sphere)
-					position += Vector3(0, 0, dynamic_cast<SphereVolume*> (selectionObject)->GetRadius());*/
+
+				int tempLayer = selectionObject->GetLayer();
+				selectionObject->SetLayer(-1);
 
 				Ray ray2(position, Vector3(0,0,-1));
 				RayCollision nextClosestCollision;
@@ -524,6 +525,8 @@ bool TutorialGame::SelectObject() {
 					Debug::DrawLine(ray2.GetPosition(), nextClosestCollision.collidedAt, Vector4(1, 0, 0, 1), 10);
 					((GameObject*) nextClosestCollision.node)->GetRenderObject()->SetColour(Vector4(0, 0, 1, 1));
 				}
+
+				selectionObject->SetLayer(tempLayer);
 				//////////////////////////////////////////
 
 				return true;
@@ -583,5 +586,18 @@ void TutorialGame::MoveSelectedObject() {
 			if (closestCollision.node == selectionObject)
 				selectionObject->GetPhysicsObject()->AddForce(ray.GetDirection() * forceMagnitude);
 		}
+	}
+
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::W)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(1,0,0) * forceMagnitude);
+	}
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::A)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * forceMagnitude);
+	}
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::S)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * forceMagnitude);
+	}
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::D)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * forceMagnitude);
 	}
 }

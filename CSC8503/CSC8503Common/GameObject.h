@@ -75,6 +75,15 @@ namespace NCL {
 				return worldID;
 			}
 
+			void SetLayer(int layer)
+			{
+				this->layer = layer;
+			}
+			int GetLayer() const
+			{
+				return layer;
+			}
+
 		protected:
 			Transform			transform;
 
