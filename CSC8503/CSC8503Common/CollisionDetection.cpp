@@ -136,17 +136,12 @@ bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& w
 	Vector3 sphereSize = Vector3(volume.GetRadius(), volume.GetRadius(), volume.GetRadius());
 	SphereVolume* sphereVolume = new SphereVolume(false, volume.GetRadius());
 	sphere->SetBoundingVolume((CollisionVolume*)sphere);
-
-	std::cout << position;
-	std::cout << collision.collidedAt << std::endl;
-
-	sphere->GetTransform().SetScale(sphereSize).SetPosition(Vector3(position.x, Clamp(collision.collidedAt.y, topCentre.y, bottomCentre.y), position.z));
-
+	sphere->GetTransform().SetScale(sphereSize).SetPosition(Vector3(position.x, Clamp(collision.collidedAt.y, bottomCentre.y, topCentre.y), position.z));
+	
 	collided = RaySphereIntersection(r, sphere->GetTransform(), sphereVolume, collision);
 
 	if (collided)
 	{
-		std::cout << "COLLIDED" << std::endl;
 		collision.collidedAt = transform * collision.collidedAt + position;
 	}
 
