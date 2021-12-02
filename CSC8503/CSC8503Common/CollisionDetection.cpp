@@ -113,20 +113,12 @@ bool CollisionDetection::RayOBBIntersection(const Ray&r, const Transform& worldT
 }
 
 bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& worldTransform, const CapsuleVolume& volume, RayCollision& collision) {
-	Quaternion orientation = worldTransform.GetOrientation();
 	Vector3 position = worldTransform.GetPosition();
 	Vector3 topCentre = Vector3(position.x, position.y + volume.GetHalfHeight() - volume.GetRadius(), position.z);
 	Vector3 bottomCentre = Vector3(position.x, position.y - volume.GetHalfHeight() + volume.GetRadius(), position.z);
 
-	Matrix3 transform = Matrix3(orientation);
-	Matrix3 invTransform = Matrix3(orientation.Conjugate());
-
-	Vector3 localRayPos = r.GetPosition() - position;
-
-	Ray tempRay(invTransform * localRayPos, invTransform * r.GetDirection());
-
-	Vector3 normal = Vector3::Cross((bottomCentre - topCentre), (tempRay.GetPosition() - topCentre));
-	float distance = Vector3::Dot(normal, tempRay.GetPosition());
+	Vector3 normal = Vector3::Cross((bottomCentre - topCentre), (r.GetPosition() - topCentre));
+	float distance = Vector3::Dot(normal, r.GetPosition());
 
 	Plane capsulePlane = Plane::PlaneFromTri(normal, topCentre, bottomCentre);
 
@@ -140,10 +132,6 @@ bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& w
 	
 	collided = RaySphereIntersection(r, sphere->GetTransform(), sphereVolume, collision);
 
-	if (collided)
-	{
-		collision.collidedAt = transform * collision.collidedAt + position;
-	}
 
 	return collided;
 }
