@@ -115,7 +115,8 @@ bool CollisionDetection::RayOBBIntersection(const Ray&r, const Transform& worldT
 bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& worldTransform, const CapsuleVolume& volume, RayCollision& collision) {
 	Quaternion orientation = worldTransform.GetOrientation();
 	Vector3 position = worldTransform.GetPosition();
-	float halfHeight = volume.GetHalfHeight() + (volume.GetRadius() * 2);
+	Vector3 topCentre = Vector3(position.x, position.y + volume.GetHalfHeight() - volume.GetRadius(), position.z);
+	Vector3 bottomCentre = Vector3(position.x, position.y - volume.GetHalfHeight() + volume.GetRadius(), position.z);
 
 	Matrix3 transform = Matrix3(orientation);
 	Matrix3 invTransform = Matrix3(orientation.Conjugate());
@@ -123,12 +124,31 @@ bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& w
 	Vector3 localRayPos = r.GetPosition() - position;
 
 	Ray tempRay(invTransform * localRayPos, invTransform * r.GetDirection());
-	Plane capsulePlane = Plane(position, halfHeight, true);
+
+	Vector3 normal = Vector3::Cross((bottomCentre - topCentre), (tempRay.GetPosition() - topCentre));
+	float distance = Vector3::Dot(normal, tempRay.GetPosition());
+
+	Plane capsulePlane = Plane::PlaneFromTri(normal, topCentre, bottomCentre);
 
 	bool collided = RayPlaneIntersection(r, capsulePlane, collision);
 
+	GameObject* sphere = new GameObject(2, "SPHERE");
+	Vector3 sphereSize = Vector3(volume.GetRadius(), volume.GetRadius(), volume.GetRadius());
+	SphereVolume* sphereVolume = new SphereVolume(false, volume.GetRadius());
+	sphere->SetBoundingVolume((CollisionVolume*)sphere);
+
+	std::cout << position;
+	std::cout << collision.collidedAt << std::endl;
+
+	sphere->GetTransform().SetScale(sphereSize).SetPosition(Vector3(position.x, Clamp(collision.collidedAt.y, topCentre.y, bottomCentre.y), position.z));
+
+	collided = RaySphereIntersection(r, sphere->GetTransform(), sphereVolume, collision);
+
 	if (collided)
+	{
+		std::cout << "COLLIDED" << std::endl;
 		collision.collidedAt = transform * collision.collidedAt + position;
+	}
 
 	return collided;
 }

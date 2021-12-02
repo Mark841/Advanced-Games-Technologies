@@ -288,7 +288,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	GameObject* sphere = new GameObject(2, "SPHERE");
 
 	Vector3 sphereSize = Vector3(radius, radius, radius);
-	SphereVolume* volume = new SphereVolume(true, radius);
+	SphereVolume* volume = new SphereVolume(false, radius);
 	sphere->SetBoundingVolume((CollisionVolume*)volume);
 
 	sphere->GetTransform()
