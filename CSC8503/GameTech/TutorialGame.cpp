@@ -298,6 +298,13 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, basicTex, basicShader));
 	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
 
+	if (rand() % 2) {
+		sphere->GetPhysicsObject()->SetElasticity(0.9f);
+	}
+	else {
+		sphere->GetPhysicsObject()->SetElasticity(0.2f);
+	}
+	
 	sphere->GetPhysicsObject()->SetInverseMass(inverseMass);
 	sphere->GetPhysicsObject()->InitSphereInertia(volume->GetHollow());
 
