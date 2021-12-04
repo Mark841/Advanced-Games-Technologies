@@ -1,5 +1,6 @@
 #include "TutorialGame.h"
 #include "../CSC8503Common/GameWorld.h"
+#include "../CSC8503Common/PositionConstraint.h"
 #include "../../Plugins/OpenGLRendering/OGLMesh.h"
 #include "../../Plugins/OpenGLRendering/OGLShader.h"
 #include "../../Plugins/OpenGLRendering/OGLTexture.h"
@@ -245,19 +246,42 @@ void TutorialGame::InitWorld() {
 	physics->Clear();
 
 	InitMixedGridWorld(5, 5, 3.5f, 3.5f);
+	BridgeConstraintTest();
 	InitGameExamples();
 	InitDefaultFloor();
 }
 
 void TutorialGame::BridgeConstraintTest() {
+	Vector3 cubeSize = Vector3(8, 4, 8);
 
+	float invCubeMass = 5; // how heavy the middle pieces are
+	int numLinks = 10;
+	float maxDistance = 22; // constraint distance
+	float cubeDistance = 20; // distance between links
 
+	Vector3 startPos = Vector3(50, 50, 50);
+
+	GameObject* start = AddCubeToWorld(startPos + Vector3(0, 0, 0), cubeSize, 0);
+	GameObject* end = AddCubeToWorld(startPos + Vector3((numLinks + 2) * cubeDistance, 0, 0), cubeSize, 0);
+
+	GameObject* previous = start;
+
+	for (int i = 0; i < numLinks; ++i)
+	{
+		GameObject* block = AddCubeToWorld(startPos + Vector3((i + 1) * cubeDistance, 0, 0), cubeSize, invCubeMass);
+		PositionConstraint* constraint = new PositionConstraint(previous, block, maxDistance);
+
+		world->AddConstraint(constraint);
+		previous = block;
+	}
+	PositionConstraint* constraint = new PositionConstraint(previous, end, maxDistance);
+	world->AddConstraint(constraint);
 }
 
 // A single function to add a large immoveable cube to the bottom of our world
 
 GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
-	GameObject* floor = new GameObject(1);
+	GameObject* floor = new GameObject(1, "FLOOR");
 
 	Vector3 floorSize	= Vector3(100, 2, 100);
 	AABBVolume* volume	= new AABBVolume(floorSize);
