@@ -44,10 +44,7 @@ namespace NCL {
 				size_t otherHash = (size_t)other.a->GetWorldID() + ((size_t)other.b->GetWorldID() << 32);
 				size_t thisHash  = (size_t)a->GetWorldID()		 + ((size_t)b-> GetWorldID() << 32);
 
-				if (thisHash < otherHash) {
-					return true;
-				}
-				return false;
+				return (thisHash < otherHash);
 			}
 
 			bool operator ==(const CollisionInfo& other) const {
