@@ -112,6 +112,7 @@ namespace NCL {
 		static bool CapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
 			const CapsuleVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo);
 
+		static Vector3 ClosestPointOnLinesSegment(Vector3 A, Vector3 B, Vector3 point);
 
 		static Vector3 Unproject(const Vector3& screenPos, const Camera& cam);
 

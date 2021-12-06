@@ -550,9 +550,10 @@ bool CollisionDetection::OBBCapsuleIntersection(const CapsuleVolume& volumeA, co
 {
 	return false;
 }
-
+// Sphere / Capsule
 bool CollisionDetection::SphereCapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
-	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
+	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) 
+{
 	Quaternion capsuleOrientation = worldTransformA.GetOrientation();
 	Vector3 capsulePosition = worldTransformA.GetPosition();
 
@@ -567,9 +568,10 @@ bool CollisionDetection::SphereCapsuleIntersection(const CapsuleVolume& volumeA,
 
 	return SphereIntersection(sphereVolume, transform, volumeB, worldTransformB, collisionInfo);
 }
-// TO DO
+// AABB / Capsule
 bool CollisionDetection::AABBCapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
-	const AABBVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
+	const AABBVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) 
+{
 	Quaternion capsuleOrientation = worldTransformA.GetOrientation();
 	Vector3 capsulePosition = worldTransformA.GetPosition();
 
@@ -586,8 +588,56 @@ bool CollisionDetection::AABBCapsuleIntersection(const CapsuleVolume& volumeA, c
 	collisionInfo.point.normal *= -1;
 	return collided;
 }
-// TO DO
+// Capsule / Capsule
 bool CollisionDetection::CapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
-	const CapsuleVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
-	return false;
+	const CapsuleVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) 
+{
+	Quaternion capsuleAOrientation = worldTransformA.GetOrientation();
+	Vector3 capsuleAPosition = worldTransformA.GetPosition();
+	Vector3 capsuleATopCentre = capsuleAPosition + (capsuleAOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
+	Vector3 capsuleABottomCentre = capsuleAPosition - (capsuleAOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
+
+	Quaternion capsuleBOrientation = worldTransformB.GetOrientation();
+	Vector3 capsuleBPosition = worldTransformB.GetPosition();
+	Vector3 capsuleBTopCentre = capsuleBPosition + (capsuleBOrientation * Vector3(0, 1, 0) * (volumeB.GetHalfHeight() - volumeB.GetRadius()));
+	Vector3 capsuleBBottomCentre = capsuleBPosition - (capsuleBOrientation * Vector3(0, 1, 0) * (volumeB.GetHalfHeight() - volumeB.GetRadius()));
+
+	// Vectors between line end points
+	float v0 = Vector3::Dot((capsuleBTopCentre - capsuleATopCentre), (capsuleBTopCentre - capsuleATopCentre));
+	float v1 = Vector3::Dot((capsuleBBottomCentre - capsuleATopCentre), (capsuleBBottomCentre - capsuleATopCentre));
+	float v2 = Vector3::Dot((capsuleBTopCentre - capsuleABottomCentre), (capsuleBTopCentre - capsuleABottomCentre));
+	float v3 = Vector3::Dot((capsuleBBottomCentre - capsuleABottomCentre), (capsuleBBottomCentre - capsuleABottomCentre));
+	// Get best potential endpoint on capsule A
+	Vector3 closestPointOnA;
+	if (v2 < v0 || v2 < v1 || v3 < v0 || v3 < v1) 
+	{
+		closestPointOnA = capsuleABottomCentre;
+	}
+	else
+	{
+		closestPointOnA = capsuleATopCentre;
+	}
+	// Get best point on capsule B line nearest to potentail endpoint
+	Vector3 closestPointOnB = CollisionDetection::ClosestPointOnLinesSegment(capsuleBTopCentre, capsuleBBottomCentre, closestPointOnA);
+	// Now do same for capsule A
+	closestPointOnA = CollisionDetection::ClosestPointOnLinesSegment(capsuleATopCentre, capsuleABottomCentre, closestPointOnB);
+	
+	// do sphere intersection
+	SphereVolume* sphereAVolume = new SphereVolume(false, volumeA.GetRadius());
+	Transform transformA = worldTransformA;
+	transformA.SetPosition(closestPointOnA);
+
+	SphereVolume* sphereBVolume = new SphereVolume(false, volumeB.GetRadius());
+	Transform transformB = worldTransformB;
+	transformB.SetPosition(closestPointOnB);
+
+	return SphereIntersection(sphereAVolume, transformA, sphereBVolume, transformB, collisionInfo);
+}
+
+// Method from https://wickedengine.net/2020/04/26/capsule-collision-detection/
+Vector3 CollisionDetection::ClosestPointOnLinesSegment(Vector3 A, Vector3 B, Vector3 point)
+{
+	Vector3 AB = A - B;
+	float t = Vector3::Dot(point - A, AB) / Vector3::Dot(AB, AB);
+	return A + AB * NCL::Maths::Clamp(t, 0.0f, 1.0f);
 }
