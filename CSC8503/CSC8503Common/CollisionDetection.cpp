@@ -576,9 +576,11 @@ bool CollisionDetection::AABBCapsuleIntersection(const CapsuleVolume& volumeA, c
 
 	Vector3 topCentre = capsulePosition + (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
 	Vector3 bottomCentre = capsulePosition - (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
+
+	return false;
 }
 // TO DO
 bool CollisionDetection::CapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
 	const CapsuleVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
-
+	return false;
 }
