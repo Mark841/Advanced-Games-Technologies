@@ -113,10 +113,12 @@ bool CollisionDetection::RayOBBIntersection(const Ray&r, const Transform& worldT
 }
 
 bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& worldTransform, const CapsuleVolume& volume, RayCollision& collision) {
+	Quaternion orientation = worldTransform.GetOrientation();
 	Vector3 position = worldTransform.GetPosition();
+	
 	// To make Oriented Capsule instead of Axis Aligned would need to get the correct location for centres by adding the transformed half heights to each axis
-	Vector3 topCentre = Vector3(position.x, position.y + volume.GetHalfHeight() - volume.GetRadius(), position.z);
-	Vector3 bottomCentre = Vector3(position.x, position.y - volume.GetHalfHeight() + volume.GetRadius(), position.z);
+	Vector3 topCentre = position + (orientation * Vector3(0, 1, 0) * (volume.GetHalfHeight() - volume.GetRadius()));
+	Vector3 bottomCentre = position - (orientation * Vector3(0, 1, 0) * (volume.GetHalfHeight() - volume.GetRadius()));
 
 	Vector3 normal = Vector3::Cross((bottomCentre - topCentre), (r.GetPosition() - topCentre));
 	float distance = Vector3::Dot(normal, r.GetPosition());
@@ -125,14 +127,12 @@ bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& w
 
 	bool collided = RayPlaneIntersection(r, capsulePlane, collision);
 
-	GameObject* sphere = new GameObject(2, "SPHERE");
-	Vector3 sphereSize = Vector3(volume.GetRadius(), volume.GetRadius(), volume.GetRadius());
 	SphereVolume* sphereVolume = new SphereVolume(false, volume.GetRadius());
-	sphere->SetBoundingVolume((CollisionVolume*)sphere);
 	// To make Oriented Capsule instead of Axis Aligned would need to get the correct location for centres by adding the transformed half heights to each axis
-	sphere->GetTransform().SetScale(sphereSize).SetPosition(Vector3(position.x, Clamp(collision.collidedAt.y, bottomCentre.y, topCentre.y), position.z));
+	Transform transform = worldTransform;
+	transform.SetPosition(Vector3(position.x, Clamp(collision.collidedAt.y, bottomCentre.y, topCentre.y), position.z));
 	
-	collided = RaySphereIntersection(r, sphere->GetTransform(), sphereVolume, collision);
+	collided = RaySphereIntersection(r, transform, sphereVolume, collision);
 
 
 	return collided;
