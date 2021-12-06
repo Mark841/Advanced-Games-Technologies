@@ -72,6 +72,9 @@ void TutorialGame::UpdateGame(float dt) {
 	if (!inSelectionMode) {
 		world->GetMainCamera()->UpdateCamera(dt);
 	}
+	if (testStateObject) {
+		testStateObject->Update(dt);
+	}
 
 	UpdateKeys();
 
@@ -249,6 +252,7 @@ void TutorialGame::InitWorld() {
 	BridgeConstraintTest();
 	InitGameExamples();
 	InitDefaultFloor();
+	testStateObject = AddStateObjectToWorld(Vector3(0, 10, 0));
 }
 
 void TutorialGame::BridgeConstraintTest() {
@@ -491,6 +495,26 @@ GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
 
 GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 	GameObject* apple = new GameObject(3, "BONUS");
+
+	SphereVolume* volume = new SphereVolume(0.25f);
+	apple->SetBoundingVolume((CollisionVolume*)volume);
+	apple->GetTransform()
+		.SetScale(Vector3(0.25, 0.25, 0.25))
+		.SetPosition(position);
+
+	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, nullptr, basicShader));
+	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
+
+	apple->GetPhysicsObject()->SetInverseMass(1.0f);
+	apple->GetPhysicsObject()->InitSphereInertia(false);
+
+	world->AddGameObject(apple);
+
+	return apple;
+}
+StateGameObject* TutorialGame::AddStateObjectToWorld(const Vector3& position)
+{
+	StateGameObject* apple = new StateGameObject();
 
 	SphereVolume* volume = new SphereVolume(0.25f);
 	apple->SetBoundingVolume((CollisionVolume*)volume);
