@@ -2,7 +2,7 @@
 #include <vector>
 #include "Ray.h"
 #include "CollisionDetection.h"
-#include "QuadTree.h"
+#include "OctTree.h"
 namespace NCL {
 		class Camera;
 		using Maths::Ray;

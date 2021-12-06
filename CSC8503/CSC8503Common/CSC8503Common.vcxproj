@@ -151,7 +151,7 @@
     <ClInclude Include="PhysicsSystem.h" />
     <ClInclude Include="PushdownMachine.h" />
     <ClInclude Include="PushdownState.h" />
-    <ClInclude Include="QuadTree.h" />
+    <ClInclude Include="OctTree.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="RenderObject.h" />
     <ClInclude Include="State.h" />
@@ -171,7 +171,7 @@
     <ClCompile Include="PositionConstraint.cpp" />
     <ClCompile Include="PushdownMachine.cpp" />
     <ClCompile Include="PushdownState.cpp" />
-    <ClCompile Include="QuadTree.cpp" />
+    <ClCompile Include="OctTree.cpp" />
     <ClCompile Include="RenderObject.cpp" />
     <ClCompile Include="StateMachine.cpp" />
     <ClCompile Include="StateTransition.cpp" />

@@ -9,15 +9,15 @@ namespace NCL {
 	using namespace NCL::Maths;
 	namespace CSC8503 {
 		template<class T>
-		class QuadTree;
+		class OctTree;
 
 		template<class T>
-		struct QuadTreeEntry {
+		struct OctTreeEntry {
 			Vector3 pos;
 			Vector3 size;
 			T object;
 
-			QuadTreeEntry(T obj, Vector3 pos, Vector3 size) {
+			OctTreeEntry(T obj, Vector3 pos, Vector3 size) {
 				object		= obj;
 				this->pos	= pos;
 				this->size	= size;
@@ -25,39 +25,39 @@ namespace NCL {
 		};
 
 		template<class T>
-		class QuadTreeNode	{
+		class OctTreeNode	{
 		public:
-			typedef std::function<void(std::list<QuadTreeEntry<T>>&)> QuadTreeFunc;
+			typedef std::function<void(std::list<OctTreeEntry<T>>&)> OctTreeFunc;
 		protected:
-			friend class QuadTree<T>;
+			friend class OctTree<T>;
 
-			QuadTreeNode() {}
+			OctTreeNode() {}
 
-			QuadTreeNode(Vector2 pos, Vector2 size) {
+			OctTreeNode(Vector3 pos, Vector3 size) {
 				children		= nullptr;
 				this->position	= pos;
 				this->size		= size;
 			}
 
-			~QuadTreeNode() {
+			~OctTreeNode() {
 				delete[] children;
 			}
 
 			void Insert(T& object, const Vector3& objectPos, const Vector3& objectSize, int depthLeft, int maxSize) {
-				if (!CollisionDetection::AABBTest(objectPos, Vector3(position.x, 0, position.y), objectSize, Vector3(size.x, 1000.0f, size.y)))
+				if (!CollisionDetection::AABBTest(objectPos, position, objectSize, size))
 				{
 					return;
 				}
 				if (children)
 				{ // not a leaf node, just descend the tree
-					for (int i = 0; i < 4; ++i)
+					for (int i = 0; i < 8; ++i)
 					{
 						children[i].Insert(object, objectPos, objectSize, depthLeft - 1, maxSize);
 					}
 				}
 				else
 				{ // currently a leaf node, can just expand
-					contents.push_back(QuadTreeEntry<T>(object, objectPos, objectSize));
+					contents.push_back(OctTreeEntry<T>(object, objectPos, objectSize));
 					if ((int)contents.size() > maxSize && depthLeft > 0)
 					{
 						if (!children)
@@ -66,7 +66,7 @@ namespace NCL {
 							// we need to reinsert the contents so far into the new subdivisions
 							for (const auto& i : contents)
 							{
-								for (int j = 0; j < 4; ++j)
+								for (int j = 0; j < 8; ++j)
 								{
 									auto entry = i;
 									children[j].Insert(entry.object, entry.pos, entry.size, depthLeft - 1, maxSize);
@@ -79,22 +79,26 @@ namespace NCL {
 			}
 
 			void Split() {
-				Vector2 halfSize = size / 2.0f;
-				children = new QuadTreeNode<T>[4];
-				children[0] = QuadTreeNode<T>(position + Vector2(-halfSize.x, halfSize.y), halfSize);
-				children[1] = QuadTreeNode<T>(position + Vector2(halfSize.x, halfSize.y), halfSize);
-				children[2] = QuadTreeNode<T>(position + Vector2(-halfSize.x, -halfSize.y), halfSize);
-				children[3] = QuadTreeNode<T>(position + Vector2(halfSize.x, -halfSize.y), halfSize);
+				Vector3 halfSize = size / 2.0f;
+				children = new OctTreeNode<T>[8];
+				children[0] = OctTreeNode<T>(position + Vector3(-halfSize.x, halfSize.y, halfSize.z), halfSize);
+				children[1] = OctTreeNode<T>(position + Vector3(halfSize.x, halfSize.y, halfSize.z), halfSize);
+				children[2] = OctTreeNode<T>(position + Vector3(-halfSize.x, -halfSize.y, halfSize.z), halfSize);
+				children[3] = OctTreeNode<T>(position + Vector3(halfSize.x, -halfSize.y, halfSize.z), halfSize);
+				children[4] = OctTreeNode<T>(position + Vector3(-halfSize.x, halfSize.y, -halfSize.z), halfSize);
+				children[5] = OctTreeNode<T>(position + Vector3(halfSize.x, halfSize.y, -halfSize.z), halfSize);
+				children[6] = OctTreeNode<T>(position + Vector3(-halfSize.x, -halfSize.y, -halfSize.z), halfSize);
+				children[7] = OctTreeNode<T>(position + Vector3(halfSize.x, -halfSize.y, -halfSize.z), halfSize);
 			}
 
 			void DebugDraw() {
 
 			}
 
-			void OperateOnContents(QuadTreeFunc& func) {
+			void OperateOnContents(OctTreeFunc& func) {
 				if (children)
 				{
-					for (int i = 0; i < 4; ++i)
+					for (int i = 0; i < 8; ++i)
 					{
 						children[i].OperateOnContents(func);
 					}
@@ -109,12 +113,12 @@ namespace NCL {
 			}
 
 		protected:
-			std::list< QuadTreeEntry<T> >	contents;
+			std::list< OctTreeEntry<T> >	contents;
 
-			Vector2 position;
-			Vector2 size;
+			Vector3 position;
+			Vector3 size;
 
-			QuadTreeNode<T>* children;
+			OctTreeNode<T>* children;
 		};
 	}
 }
@@ -124,15 +128,15 @@ namespace NCL {
 	using namespace NCL::Maths;
 	namespace CSC8503 {
 		template<class T>
-		class QuadTree
+		class OctTree
 		{
 		public:
-			QuadTree(Vector2 size, int maxDepth = 6, int maxSize = 5){
-				root = QuadTreeNode<T>(Vector2(), size);
+			OctTree(Vector3 size, int maxDepth = 6, int maxSize = 5){
+				root = OctTreeNode<T>(Vector3(), size);
 				this->maxDepth	= maxDepth;
 				this->maxSize	= maxSize;
 			}
-			~QuadTree() {
+			~OctTree() {
 			}
 
 			void Insert(T object, const Vector3& pos, const Vector3& size) {
@@ -143,12 +147,12 @@ namespace NCL {
 				root.DebugDraw();
 			}
 
-			void OperateOnContents(typename QuadTreeNode<T>::QuadTreeFunc  func) {
+			void OperateOnContents(typename OctTreeNode<T>::OctTreeFunc  func) {
 				root.OperateOnContents(func);
 			}
 
 		protected:
-			QuadTreeNode<T> root;
+			OctTreeNode<T> root;
 			int maxDepth;
 			int maxSize;
 		};

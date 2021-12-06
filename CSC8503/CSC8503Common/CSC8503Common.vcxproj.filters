@@ -96,14 +96,14 @@
     <ClInclude Include="NavigationMap.h">
       <Filter>Pathfinding</Filter>
     </ClInclude>
-    <ClInclude Include="QuadTree.h">
-      <Filter>CollisionDetection</Filter>
-    </ClInclude>
     <ClInclude Include="CapsuleVolume.h">
       <Filter>CollisionDetection</Filter>
     </ClInclude>
     <ClInclude Include="PositionConstraint.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OctTree.h">
+      <Filter>CollisionDetection</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -149,11 +149,11 @@
     <ClCompile Include="NavigationMesh.cpp">
       <Filter>Pathfinding</Filter>
     </ClCompile>
-    <ClCompile Include="QuadTree.cpp">
-      <Filter>CollisionDetection</Filter>
-    </ClCompile>
     <ClCompile Include="PositionConstraint.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OctTree.cpp">
+      <Filter>CollisionDetection</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
