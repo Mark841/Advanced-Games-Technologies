@@ -116,7 +116,6 @@ bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& w
 	Quaternion orientation = worldTransform.GetOrientation();
 	Vector3 position = worldTransform.GetPosition();
 	
-	// To make Oriented Capsule instead of Axis Aligned would need to get the correct location for centres by adding the transformed half heights to each axis
 	Vector3 topCentre = position + (orientation * Vector3(0, 1, 0) * (volume.GetHalfHeight() - volume.GetRadius()));
 	Vector3 bottomCentre = position - (orientation * Vector3(0, 1, 0) * (volume.GetHalfHeight() - volume.GetRadius()));
 
@@ -128,12 +127,10 @@ bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& w
 	bool collided = RayPlaneIntersection(r, capsulePlane, collision);
 
 	SphereVolume* sphereVolume = new SphereVolume(false, volume.GetRadius());
-	// To make Oriented Capsule instead of Axis Aligned would need to get the correct location for centres by adding the transformed half heights to each axis
 	Transform transform = worldTransform;
 	transform.SetPosition(Vector3(position.x, Clamp(collision.collidedAt.y, bottomCentre.y, topCentre.y), position.z));
 	
 	collided = RaySphereIntersection(r, transform, sphereVolume, collision);
-
 
 	return collided;
 }
@@ -377,6 +374,15 @@ bool CollisionDetection::ObjectIntersection(GameObject* a, GameObject* b, Collis
 		return SphereCapsuleIntersection((CapsuleVolume&)*volB, transformB, (SphereVolume&)*volA, transformA, collisionInfo);
 	}
 
+	if (volA->type == VolumeType::Capsule && volB->type == VolumeType::AABB) {
+		return AABBCapsuleIntersection((CapsuleVolume&)*volA, transformA, (SphereVolume&)*volB, transformB, collisionInfo);
+	}
+	if (volA->type == VolumeType::AABB && volB->type == VolumeType::Capsule) {
+		collisionInfo.a = b;
+		collisionInfo.b = a;
+		return AABBCapsuleIntersection((CapsuleVolume&)*volB, transformB, (SphereVolume&)*volA, transformA, collisionInfo);
+	}
+
 	return false;
 }
 
@@ -491,14 +497,27 @@ bool CollisionDetection::AABBSphereIntersection(const AABBVolume& volumeA, const
 	return false;
 }
 
-bool CollisionDetection::OBBIntersection(
-	const OBBVolume& volumeA, const Transform& worldTransformA,
+bool CollisionDetection::OBBIntersection(const OBBVolume& volumeA, const Transform& worldTransformA,
 	const OBBVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
 	return false;
 }
 
-bool CollisionDetection::SphereCapsuleIntersection(
-	const CapsuleVolume& volumeA, const Transform& worldTransformA,
+bool CollisionDetection::SphereCapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
 	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
-	return false;
+	Quaternion capsuleOrientation = worldTransformA.GetOrientation();
+	Vector3 capsulePosition = worldTransformA.GetPosition();
+
+	Vector3 topCentre = capsulePosition + (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
+	Vector3 bottomCentre = capsulePosition - (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
+	
+	Vector3 capsuleLine = topCentre - bottomCentre;
+	SphereVolume* sphereVolume = new SphereVolume(false, volumeA.GetRadius());
+	Transform transform = worldTransformA;
+	Vector3 slope = capsuleLine.Normalised();	
+	transform.SetPosition((slope * (Vector3::Dot(slope, worldTransformB.GetPosition() - topCentre))) + topCentre);
+
+	return SphereIntersection(sphereVolume, transform, volumeB, worldTransformB, collisionInfo);
 }
+
+bool CollisionDetection::AABBCapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
+	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
