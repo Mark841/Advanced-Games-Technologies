@@ -574,7 +574,6 @@ bool CollisionDetection::AABBCapsuleIntersection(const CapsuleVolume& volumeA, c
 {
 	Quaternion capsuleOrientation = worldTransformA.GetOrientation();
 	Vector3 capsulePosition = worldTransformA.GetPosition();
-
 	Vector3 topCentre = capsulePosition + (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
 	Vector3 bottomCentre = capsulePosition - (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
 
@@ -583,7 +582,7 @@ bool CollisionDetection::AABBCapsuleIntersection(const CapsuleVolume& volumeA, c
 	Transform transform = worldTransformA;
 	Vector3 slope = capsuleLine.Normalised();
 	transform.SetPosition((slope * (Vector3::Dot(slope, worldTransformB.GetPosition() - topCentre))) + topCentre);
-
+	
 	bool collided = AABBSphereIntersection(volumeB, worldTransformB, sphereVolume, transform, collisionInfo);
 	collisionInfo.point.normal *= -1;
 	return collided;

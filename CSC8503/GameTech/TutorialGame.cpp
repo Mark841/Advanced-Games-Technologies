@@ -412,7 +412,8 @@ void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing
 				AddSphereToWorld(position, sphereRadius);
 			}
 			else {
-				AddCapsuleToWorld(position, halfHeight, sphereRadius);
+				//AddCapsuleToWorld(position, halfHeight, sphereRadius);
+				AddCapsuleToWorld(Vector3(position.x, 14.0f, position.z), halfHeight, sphereRadius);
 			}
 		}
 	}
