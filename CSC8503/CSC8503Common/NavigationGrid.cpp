@@ -124,7 +124,7 @@ bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, Navigation
 				if (!neighbour) { //might not be connected...
 					continue;
 				}	
-				bool inClosed	= NodeInList(neighbour, closedList);
+				bool inClosed = NodeInList(neighbour, closedList);
 				if (inClosed) {
 					continue; //already discarded this neighbour...
 				}
@@ -155,7 +155,7 @@ bool NavigationGrid::NodeInList(GridNode* n, std::vector<GridNode*>& list) const
 	return i == list.end() ? false : true;
 }
 
-GridNode*  NavigationGrid::RemoveBestNode(std::vector<GridNode*>& list) const {
+GridNode* NavigationGrid::RemoveBestNode(std::vector<GridNode*>& list) const {
 	std::vector<GridNode*>::iterator bestI = list.begin();
 
 	GridNode* bestNode = *list.begin();
