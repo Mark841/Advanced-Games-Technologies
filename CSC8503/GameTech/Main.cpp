@@ -303,7 +303,7 @@ hide or show the
 int main() {
 	Window*w = Window::CreateGameWindow("CSC8503 Game technology!", 1600, 900);
 
-	TestPushdownAutomata(w);
+	//TestPushdownAutomata(w);
 
 	if (!w->HasInitialised()) {
 		return -1;
