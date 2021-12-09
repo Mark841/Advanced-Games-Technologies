@@ -17,6 +17,7 @@ TutorialGame::TutorialGame(int level)	{
 	forceMagnitude	= 10.0f;
 	useGravity		= false;
 	inSelectionMode = false;
+	totalTime = 0.0f;
 	this->level = level;
 
 	Debug::SetRenderer(renderer);
@@ -71,8 +72,10 @@ TutorialGame::~TutorialGame()	{
 }
 
 void TutorialGame::UpdateGame(float dt) {
+	Debug::SetRenderer(renderer); 
 	if (level != 0)
 	{
+		totalTime += dt;
 		if (!inSelectionMode) {
 			world->GetMainCamera()->UpdateCamera(dt);
 		}
@@ -105,7 +108,6 @@ void TutorialGame::UpdateGame(float dt) {
 			//Debug::DrawAxisLines(lockedObject->GetTransform().GetMatrix(), 2.0f);
 		}
 	}
-
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
 
@@ -326,7 +328,6 @@ void TutorialGame::BridgeConstraintTest() {
 }
 
 // A single function to add a large immoveable cube to the bottom of our world
-
 GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 	GameObject* floor = new GameObject(1, "FLOOR");
 

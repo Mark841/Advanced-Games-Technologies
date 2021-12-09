@@ -66,6 +66,7 @@ namespace NCL {
 			bool paused;
 			bool inSelectionMode;
 			int level;
+			float totalTime;
 
 			float		forceMagnitude;
 

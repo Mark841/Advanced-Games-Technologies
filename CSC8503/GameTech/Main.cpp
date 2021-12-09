@@ -265,7 +265,7 @@ class Game2 : public PushdownState
 		g->SetPaused(false);
 	}
 protected:
-	TutorialGame* g = new TutorialGame(2);;
+	TutorialGame* g = new TutorialGame(2);
 };
 class IntroScreen : public PushdownState
 {
