@@ -76,6 +76,14 @@ namespace NCL {
 			{
 				return elasticity;
 			}
+			void SetFriction(float friction)
+			{
+				this->friction = friction;
+			}
+			float GetFriction() const
+			{
+				return friction;
+			}
 
 		protected:
 			const CollisionVolume* volume;

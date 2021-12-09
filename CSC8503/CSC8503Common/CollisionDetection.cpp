@@ -571,6 +571,9 @@ bool CollisionDetection::OBBCapsuleIntersection(const CapsuleVolume& volumeA, co
 	return false;
 }
 // Sphere / Capsule
+// TO DO
+// Get orientation of capsule, then apply invTransform only to the sphere location and for capsule just on y axis add and subtract half height for the capsule to make it straight. 
+// Then find point on that y axis line where sphere and sphere could collide
 bool CollisionDetection::SphereCapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
 	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) 
 {
