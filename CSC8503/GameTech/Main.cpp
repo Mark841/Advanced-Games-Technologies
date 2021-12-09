@@ -208,85 +208,93 @@ class PauseScreen : public PushdownState
 {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override
 	{
+		std::cout << "PAUSED" << std::endl;
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::U))
 		{
 			return PushdownResult::Pop;
 		}
 		return PushdownResult::NoChange;
 	}
-	void OnAwake() override
-	{
-		std::cout << "Press U to unpause the game!" << std::endl;
-	}
 };
-class GameScreen : public PushdownState
+class Game1 : public PushdownState
 {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override
 	{
-		pauseReminder -= dt;
-		if (pauseReminder < 0)
-		{
-			std::cout << "Coins mined: " << coinsMined << std::endl;
-			std::cout << "Press P to pause the game, or F1 to return to main menu!" << std::endl;
-			pauseReminder += 1.0f;
-		}
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::P))
 		{
+			g->SetPaused(true);
+			g->UpdateGame(dt);
 			*newState = new PauseScreen();
 			return PushdownResult::Push;
 		}
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::F1))
+		Debug::Print("PRESS 0 TO RETURN TO MENU", Vector2(5, 80));
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM0))
 		{
-			std::cout << "Returning to main menu!" << std::endl;
 			return PushdownResult::Pop;
 		}
-		if (rand() % 7 == 0)
-		{
-			coinsMined++;
-		}
+		g->UpdateGame(dt);
 		return PushdownResult::NoChange;
 	}
 	void OnAwake() override
 	{
-		std::cout << "Preparing to mine coins!" << std::endl;
+		g->SetPaused(false);
 	}
 protected:
-	int coinsMined = 0;
-	float pauseReminder = 1.0f;
+	TutorialGame* g = new TutorialGame(1);
+};
+class Game2 : public PushdownState
+{
+	PushdownResult OnUpdate(float dt, PushdownState** newState) override
+	{
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::P))
+		{
+			g->SetPaused(true);
+			g->UpdateGame(dt);
+			*newState = new PauseScreen();
+			return PushdownResult::Push;
+		}
+		Debug::Print("PRESS 0 TO RETURN TO MENU", Vector2(5, 80));
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM0))
+		{
+			return PushdownResult::Pop;
+		}
+		g->UpdateGame(dt);
+		return PushdownResult::NoChange;
+	}
+	void OnAwake() override
+	{
+		g->SetPaused(false);
+	}
+protected:
+	TutorialGame* g = new TutorialGame(2);;
 };
 class IntroScreen : public PushdownState
 {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override
 	{
-		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::SPACE))
+		Debug::Print("LAUNCH LEVEL 1: (PRESS 1)", Vector2(25, 50));
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1))
 		{
-			*newState = new GameScreen();
+			*newState = new Game1();
 			return PushdownResult::Push;
 		}
+		Debug::Print("LAUNCH LEVEL 2: (PRESS 2)", Vector2(25, 60));
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM2))
+		{
+			*newState = new Game2();
+			return PushdownResult::Push;
+		}
+		Debug::Print("PRESS ESCAPE TO EXIT", Vector2(30, 70));
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::ESCAPE))
 		{
 			return PushdownResult::Pop;
 		}
+		g->UpdateGame(dt);
 		return PushdownResult::NoChange;
 	}
-	void OnAwake() override
-	{
-		std::cout << "Welcome to a really awesome game!" << std::endl;
-		std::cout << "Press SPACE to begin or ESCAPE to quit" << std::endl;
-	}
+protected:
+	TutorialGame* g = new TutorialGame(0);
 };
-void TestPushdownAutomata(Window* w)
-{
-	PushdownMachine machine(new IntroScreen());
-	while (w->UpdateWindow())
-	{
-		float dt = w->GetTimer()->GetTimeDeltaSeconds();
-		if (!machine.Update(dt))
-		{
-			return;
-		}
-	}
-}
 
 /*
 
@@ -302,9 +310,7 @@ hide or show the
 */
 int main() {
 	Window*w = Window::CreateGameWindow("CSC8503 Game technology!", 1600, 900);
-
-	//TestPushdownAutomata(w);
-
+	
 	if (!w->HasInitialised()) {
 		return -1;
 	}	
@@ -312,19 +318,20 @@ int main() {
 	w->ShowOSPointer(false);
 	w->LockMouseToWindow(true);
 
-	TutorialGame* g = new TutorialGame();
 	w->GetTimer()->GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
 
 	//TestStateMachine();
 	//TestBehaviourTree();
 
-	TestPathfinding();
+	//TestPathfinding();
+	PushdownMachine machine(new IntroScreen());
 
-	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE)) {
-		
-		DisplayPathfinding();
+	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE)) 
+	{		
+		//DisplayPathfinding();
 
 		float dt = w->GetTimer()->GetTimeDeltaSeconds();
+		
 		if (dt > 0.1f) {
 			std::cout << "Skipping large time delta" << std::endl;
 			continue; //must have hit a breakpoint or something to have a 1 second frame time!
@@ -339,10 +346,13 @@ int main() {
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::T)) {
 			w->SetWindowPosition(0, 0);
 		}
+		if (!machine.Update(dt))
+		{
+			return -1;
+		}
 
-		w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
-
-		g->UpdateGame(dt);
+		//w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
+		w->SetTitle("Gametech frame rate:" + std::to_string(1.0f / dt));
 	}
 	Window::DestroyGameWindow();
 }

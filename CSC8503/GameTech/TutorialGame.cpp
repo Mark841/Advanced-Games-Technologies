@@ -9,7 +9,7 @@
 using namespace NCL;
 using namespace CSC8503;
 
-TutorialGame::TutorialGame()	{
+TutorialGame::TutorialGame(int level)	{
 	world		= new GameWorld();
 	renderer	= new GameTechRenderer(*world);
 	physics		= new PhysicsSystem(*world);
@@ -17,11 +17,13 @@ TutorialGame::TutorialGame()	{
 	forceMagnitude	= 10.0f;
 	useGravity		= false;
 	inSelectionMode = false;
+	this->level = level;
 
 	Debug::SetRenderer(renderer);
 
 	InitialiseAssets();
 }
+
 
 /*
 
@@ -69,42 +71,39 @@ TutorialGame::~TutorialGame()	{
 }
 
 void TutorialGame::UpdateGame(float dt) {
-	if (!inSelectionMode) {
-		world->GetMainCamera()->UpdateCamera(dt);
-	}
-	if (testStateObject) {
-		testStateObject->Update(dt);
-	}
+	if (level != 0)
+	{
+		if (!inSelectionMode) {
+			world->GetMainCamera()->UpdateCamera(dt);
+		}
+		if (testStateObject) {
+			testStateObject->Update(dt);
+		}
 
-	UpdateKeys();
+		UpdateKeys();
+		DrawTextDebugs();	
 
-	if (useGravity) {
-		Debug::Print("(G)ravity on", Vector2(5, 95));
-	}
-	else {
-		Debug::Print("(G)ravity off", Vector2(5, 95));
-	}
+		SelectObject();
+		MoveSelectedObject();
+		physics->Update(dt);
 
-	SelectObject();
-	MoveSelectedObject();
-	physics->Update(dt);
+		if (lockedObject != nullptr) {
+			Vector3 objPos = lockedObject->GetTransform().GetPosition();
+			Vector3 camPos = objPos + lockedOffset;
 
-	if (lockedObject != nullptr) {
-		Vector3 objPos = lockedObject->GetTransform().GetPosition();
-		Vector3 camPos = objPos + lockedOffset;
+			Matrix4 temp = Matrix4::BuildViewMatrix(camPos, objPos, Vector3(0, 1, 0));
 
-		Matrix4 temp = Matrix4::BuildViewMatrix(camPos, objPos, Vector3(0,1,0));
+			Matrix4 modelMat = temp.Inverse();
 
-		Matrix4 modelMat = temp.Inverse();
+			Quaternion q(modelMat);
+			Vector3 angles = q.ToEuler(); //nearly there now!
 
-		Quaternion q(modelMat);
-		Vector3 angles = q.ToEuler(); //nearly there now!
+			world->GetMainCamera()->SetPosition(camPos);
+			world->GetMainCamera()->SetPitch(angles.x);
+			world->GetMainCamera()->SetYaw(angles.y);
 
-		world->GetMainCamera()->SetPosition(camPos);
-		world->GetMainCamera()->SetPitch(angles.x);
-		world->GetMainCamera()->SetYaw(angles.y);
-
-		//Debug::DrawAxisLines(lockedObject->GetTransform().GetMatrix(), 2.0f);
+			//Debug::DrawAxisLines(lockedObject->GetTransform().GetMatrix(), 2.0f);
+		}
 	}
 
 	world->UpdateWorld(dt);
@@ -245,6 +244,21 @@ void TutorialGame::InitCamera() {
 }
 
 void TutorialGame::InitWorld() {
+	if (level == 0)
+	{
+		world->ClearAndErase();
+		physics->Clear();
+	}
+	if (level == 1)
+	{
+		InitWorld1();
+	}
+	if (level == 2)
+	{
+		InitWorld2();
+	}
+}
+void TutorialGame::InitWorld1() {
 	world->ClearAndErase();
 	physics->Clear();
 
@@ -253,6 +267,35 @@ void TutorialGame::InitWorld() {
 	InitGameExamples();
 	InitDefaultFloor();
 	testStateObject = AddStateObjectToWorld(Vector3(0, 10, 0));
+}
+void TutorialGame::InitWorld2() {
+	world->ClearAndErase();
+	physics->Clear();
+
+	InitSphereGridWorld(5, 5, 5.0f, 5.0f, 2.5f);
+	InitGameExamples();
+	InitDefaultFloor();
+	testStateObject = AddStateObjectToWorld(Vector3(0, 10, 0));
+}
+void TutorialGame::DrawTextDebugs()
+{
+	if (paused)
+	{
+		Debug::Print("PRESS U TO UNPAUSE", Vector2(5, 90));
+	}
+	else
+	{
+		Debug::Print("PRESS F1 TO RESET GAME", Vector2(5, 5));
+		Debug::Print("PRESS F2 TO RESET CAMERA", Vector2(5, 10));
+		Debug::Print("PRESS P TO PAUSE", Vector2(5, 90));
+
+		if (useGravity) {
+			Debug::Print("(G)ravity on", Vector2(5, 95));
+		}
+		else {
+			Debug::Print("(G)ravity off", Vector2(5, 95));
+		}
+	}
 }
 
 void TutorialGame::BridgeConstraintTest() {
@@ -412,8 +455,8 @@ void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing
 				AddSphereToWorld(position, sphereRadius);
 			}
 			else {
-				AddCapsuleToWorld(position, halfHeight, sphereRadius);
-				//AddCapsuleToWorld(Vector3(position.x, 14.0f, position.z), halfHeight, sphereRadius);
+				//AddCapsuleToWorld(position, halfHeight, sphereRadius);
+				AddCapsuleToWorld(Vector3(position.x, 14.0f, position.z), halfHeight, sphereRadius);
 			}
 		}
 	}

@@ -7,10 +7,11 @@ namespace NCL {
 	namespace CSC8503 {
 		class TutorialGame		{
 		public:
-			TutorialGame();
+			TutorialGame(int level);
 			~TutorialGame();
-
+			
 			virtual void UpdateGame(float dt);
+			void SetPaused(bool p) { paused = p; }
 
 		protected:
 			void InitialiseAssets();
@@ -19,6 +20,9 @@ namespace NCL {
 			void UpdateKeys();
 
 			void InitWorld();
+			void InitWorld1();
+			void InitWorld2();
+			void DrawTextDebugs();
 
 			void InitGameExamples();
 
@@ -51,7 +55,9 @@ namespace NCL {
 			GameWorld*			world;
 
 			bool useGravity;
+			bool paused;
 			bool inSelectionMode;
+			int level;
 
 			float		forceMagnitude;
 
