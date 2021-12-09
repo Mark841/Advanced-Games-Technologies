@@ -649,7 +649,7 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 }
 
 GameObject* TutorialGame::AddPlayerBallToWorld(const Vector3& position, const float radius) {
-	GameObject* sphere = new GameObject(2, "PLAYER BALL", PLAYER_OBJECT);
+	GameObject* sphere = new GameObject(2, "PLAYER BALL");
 
 	Vector3 sphereSize = Vector3(radius, radius, radius);
 	SphereVolume* volume = new SphereVolume(false, radius);

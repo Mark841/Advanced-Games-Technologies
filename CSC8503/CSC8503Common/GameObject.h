@@ -12,7 +12,6 @@ using std::vector;
 enum States
 {
 	NO_STATE,
-	PLAYER_OBJECT,
 	STATE
 };
 
@@ -66,7 +65,6 @@ namespace NCL {
 				switch (state)
 				{
 				case (NO_STATE): return "NO STATE";
-				case (PLAYER_OBJECT): return "PLAYER OBJECT";
 				case (STATE): return "STATE";
 				}
 				return "UNKNOWN STATE";
