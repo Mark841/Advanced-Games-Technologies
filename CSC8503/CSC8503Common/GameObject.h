@@ -9,12 +9,19 @@
 
 using std::vector;
 
+enum States
+{
+	NO_STATE,
+	PLAYER_OBJECT,
+	STATE
+};
+
 namespace NCL {
 	namespace CSC8503 {
 
 		class GameObject	{
 		public:
-			GameObject(int layer = 0, string name = "");
+			GameObject(int layer = 0, string name = "", States state = NO_STATE);
 			~GameObject();
 
 			void SetBoundingVolume(CollisionVolume* vol) {
@@ -53,6 +60,16 @@ namespace NCL {
 
 			const string& GetName() const {
 				return name;
+			}
+			void SetState(States state) { this->state = state; }
+			const string GetState() const {
+				switch (state)
+				{
+				case (NO_STATE): return "NO STATE";
+				case (PLAYER_OBJECT): return "PLAYER OBJECT";
+				case (STATE): return "STATE";
+				}
+				return "UNKNOWN STATE";
 			}
 
 			virtual void OnCollisionBegin(GameObject* otherObject) {
@@ -95,6 +112,7 @@ namespace NCL {
 			int		worldID;
 			int layer;
 			string	name;
+			States state;
 
 			Vector3 broadphaseAABB;
 		};

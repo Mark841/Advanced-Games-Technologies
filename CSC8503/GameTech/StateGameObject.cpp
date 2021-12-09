@@ -6,7 +6,7 @@
 using namespace NCL;
 using namespace CSC8503;
 
-StateGameObject::StateGameObject()
+StateGameObject::StateGameObject(int layer, string name) : GameObject(layer, name)
 {
 	counter = 0.0f;
 	stateMachine = new StateMachine();
@@ -45,11 +45,11 @@ void StateGameObject::Update(float dt)
 
 void StateGameObject::MoveLeft(float dt)
 {
-	GetPhysicsObject()->AddForce({ -100,0,0 });
+	GetPhysicsObject()->AddForce({ -50,0,0 });
 	counter += dt;
 }
 void StateGameObject::MoveRight(float dt)
 {
-	GetPhysicsObject()->AddForce({ 100,0,0 });
+	GetPhysicsObject()->AddForce({ 50,0,0 });
 	counter -= dt;
 }

@@ -536,21 +536,27 @@ bool CollisionDetection::OBBIntersection(const OBBVolume& volumeA, const Transfo
 bool CollisionDetection::SphereOBBIntersection(const OBBVolume& volumeA, const Transform& worldTransformA,
 	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo)
 {
-	/*Quaternion boxOrientation = worldTransformA.GetOrientation();
+	Quaternion boxOrientation = worldTransformA.GetOrientation();
 	Vector3 boxPosition = worldTransformA.GetPosition();
 	Matrix3 transform = Matrix3(boxOrientation);
 	Matrix3 invTransform = Matrix3(boxOrientation.Conjugate());
 
 	Transform boxTransform = worldTransformA;
-	boxTransform.SetPosition(transform * boxTransform.GetPosition());
+	boxTransform.SetPosition(invTransform * boxTransform.GetPosition());
 
 	AABBVolume tempBox(volumeA.GetHalfDimensions());
 
 	Transform sphereTransform = worldTransformB;
-	sphereTransform.SetPosition(worldTransformB.GetPosition() - boxPosition);
+	sphereTransform.SetPosition(invTransform * worldTransformB.GetPosition());
 
-	return AABBSphereIntersection(tempBox, boxTransform, volumeB, sphereTransform, collisionInfo);*/
-	return false;
+	bool collided = AABBSphereIntersection(tempBox, boxTransform, volumeB, sphereTransform, collisionInfo);
+	if (collided)
+	{
+		collisionInfo.point.localA = transform * collisionInfo.point.localA;
+		collisionInfo.point.localB = transform * collisionInfo.point.localB;
+		collisionInfo.point.normal = transform * collisionInfo.point.normal;
+	}
+	return collided;
 }
 // TO DO
 bool CollisionDetection::AABBOBBIntersection(const AABBVolume& volumeA, const Transform& worldTransformA,
@@ -570,17 +576,26 @@ bool CollisionDetection::SphereCapsuleIntersection(const CapsuleVolume& volumeA,
 {
 	Quaternion capsuleOrientation = worldTransformA.GetOrientation();
 	Vector3 capsulePosition = worldTransformA.GetPosition();
+	Matrix3 transform = Matrix3(capsuleOrientation);
+	Matrix3 invTransform = Matrix3(capsuleOrientation.Conjugate());
 
 	Vector3 topCentre = capsulePosition + (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
 	Vector3 bottomCentre = capsulePosition - (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
 	
 	Vector3 capsuleLine = topCentre - bottomCentre;
 	SphereVolume* sphereVolume = new SphereVolume(false, volumeA.GetRadius());
-	Transform transform = worldTransformA;
+	Transform sphereTransform = worldTransformA;
 	Vector3 slope = capsuleLine.Normalised();	
-	transform.SetPosition((slope * (Vector3::Dot(slope, worldTransformB.GetPosition() - topCentre))) + topCentre);
+	sphereTransform.SetPosition((slope * (Vector3::Dot(slope, worldTransformB.GetPosition() - topCentre))) + topCentre);
 
-	return SphereIntersection(sphereVolume, transform, volumeB, worldTransformB, collisionInfo);
+	bool collided = SphereIntersection(sphereVolume, sphereTransform, volumeB, worldTransformB, collisionInfo);
+	if (collided)
+	{
+		collisionInfo.point.localA = transform * collisionInfo.point.localA;
+		collisionInfo.point.localB = transform * collisionInfo.point.localB;
+		collisionInfo.point.normal = transform * collisionInfo.point.normal;
+	}
+	return collided;
 }
 // AABB / Capsule
 bool CollisionDetection::AABBCapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
@@ -588,17 +603,27 @@ bool CollisionDetection::AABBCapsuleIntersection(const CapsuleVolume& volumeA, c
 {
 	Quaternion capsuleOrientation = worldTransformA.GetOrientation();
 	Vector3 capsulePosition = worldTransformA.GetPosition();
+	Matrix3 transform = Matrix3(capsuleOrientation);
+	Matrix3 invTransform = Matrix3(capsuleOrientation.Conjugate());
+
 	Vector3 topCentre = capsulePosition + (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
 	Vector3 bottomCentre = capsulePosition - (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
 
 	Vector3 capsuleLine = topCentre - bottomCentre;
+	capsuleLine = invTransform * capsuleLine;
 	SphereVolume* sphereVolume = new SphereVolume(false, volumeA.GetRadius());
-	Transform transform = worldTransformA;
+	Transform sphereTransform = worldTransformA;
 	Vector3 slope = capsuleLine.Normalised();
-	transform.SetPosition((slope * (Vector3::Dot(slope, worldTransformB.GetPosition() - topCentre))) + topCentre);
+	sphereTransform.SetPosition((slope * (Vector3::Dot(slope, worldTransformB.GetPosition() - topCentre))) + topCentre);
+	sphereTransform.SetPosition(invTransform * sphereTransform.GetPosition());
 	
-	bool collided = AABBSphereIntersection(volumeB, worldTransformB, sphereVolume, transform, collisionInfo);
-	collisionInfo.point.normal *= -1;
+	bool collided = AABBSphereIntersection(volumeB, worldTransformB, sphereVolume, sphereTransform, collisionInfo);
+	if (collided)
+	{
+		collisionInfo.point.localA = transform * collisionInfo.point.localA;
+		collisionInfo.point.localB = transform * collisionInfo.point.localB;
+		collisionInfo.point.normal = (transform * collisionInfo.point.normal) * -1;
+	}
 	return collided;
 }
 // Capsule / Capsule

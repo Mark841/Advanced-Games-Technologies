@@ -3,7 +3,7 @@
 
 using namespace NCL::CSC8503;
 
-GameObject::GameObject(int layer, string objectName)	{
+GameObject::GameObject(int layer, string objectName, States state)	{
 	name			= objectName;
 	worldID			= -1;
 	isActive		= true;
@@ -11,6 +11,8 @@ GameObject::GameObject(int layer, string objectName)	{
 	physicsObject	= nullptr;
 	renderObject = nullptr; 
 	this->layer = layer;
+	this->state = state;
+
 }
 
 GameObject::~GameObject()	{

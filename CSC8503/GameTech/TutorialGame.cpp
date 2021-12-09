@@ -261,21 +261,21 @@ void TutorialGame::InitWorld() {
 void TutorialGame::InitWorld1() {
 	world->ClearAndErase();
 	physics->Clear();
-
-	InitMixedGridWorld(5, 5, 3.5f, 3.5f);
-	BridgeConstraintTest();
-	InitGameExamples();
+	
 	InitDefaultFloor();
-	testStateObject = AddStateObjectToWorld(Vector3(0, 10, 0));
+
+	BridgeConstraintTest();
+
+	AddPlayerBallToWorld(Vector3(90, 60, 50), 4.0f);
 }
 void TutorialGame::InitWorld2() {
 	world->ClearAndErase();
 	physics->Clear();
 
-	InitSphereGridWorld(5, 5, 5.0f, 5.0f, 2.5f);
-	InitGameExamples();
 	InitDefaultFloor();
-	testStateObject = AddStateObjectToWorld(Vector3(0, 10, 0));
+	AddWallsToFloor();
+
+	AddPlayerBallToWorld(Vector3(90, 10, 90), 3.0f);
 }
 void TutorialGame::DrawTextDebugs()
 {
@@ -330,7 +330,7 @@ void TutorialGame::BridgeConstraintTest() {
 GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 	GameObject* floor = new GameObject(1, "FLOOR");
 
-	Vector3 floorSize	= Vector3(100, 2, 100);
+	Vector3 floorSize	= Vector3(200, 2, 200);
 	AABBVolume* volume	= new AABBVolume(floorSize);
 	floor->SetBoundingVolume((CollisionVolume*)volume);
 	floor->GetTransform()
@@ -346,6 +346,96 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 	world->AddGameObject(floor);
 
 	return floor;
+}
+void TutorialGame::AddWallsToFloor() {
+	AddLeftWallToWorld();
+	AddRightWallToWorld();
+	AddFrontWallToWorld();
+	AddBackWallToWorld();
+}
+GameObject* TutorialGame::AddLeftWallToWorld() 
+{
+	GameObject* wallLeft = new GameObject(1, "WALL");
+
+	Vector3 wallSize = Vector3(2, 10, 200);
+	AABBVolume* volume = new AABBVolume(wallSize);
+	wallLeft->SetBoundingVolume((CollisionVolume*)volume);
+	wallLeft->GetTransform()
+		.SetScale(wallSize * 2)
+		.SetPosition(Vector3(-200, 5, 0));
+
+	wallLeft->SetRenderObject(new RenderObject(&wallLeft->GetTransform(), cubeMesh, basicTex, basicShader));
+	wallLeft->SetPhysicsObject(new PhysicsObject(&wallLeft->GetTransform(), wallLeft->GetBoundingVolume()));
+
+	wallLeft->GetPhysicsObject()->SetInverseMass(0);
+	wallLeft->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(wallLeft);
+
+	return wallLeft;
+}
+GameObject* TutorialGame::AddRightWallToWorld() 
+{
+	GameObject* wallRight = new GameObject(1, "WALL");
+
+	Vector3 wallSize = Vector3(2, 10, 200);
+	AABBVolume* volume = new AABBVolume(wallSize);
+	wallRight->SetBoundingVolume((CollisionVolume*)volume);
+	wallRight->GetTransform()
+		.SetScale(wallSize * 2)
+		.SetPosition(Vector3(200, 5, 0));
+
+	wallRight->SetRenderObject(new RenderObject(&wallRight->GetTransform(), cubeMesh, basicTex, basicShader));
+	wallRight->SetPhysicsObject(new PhysicsObject(&wallRight->GetTransform(), wallRight->GetBoundingVolume()));
+
+	wallRight->GetPhysicsObject()->SetInverseMass(0);
+	wallRight->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(wallRight);
+
+	return wallRight;
+}
+GameObject* TutorialGame::AddFrontWallToWorld() 
+{
+	GameObject* wallFront = new GameObject(1, "WALL");
+
+	Vector3 wallSize = Vector3(200, 10, 2);
+	AABBVolume* volume = new AABBVolume(wallSize);
+	wallFront->SetBoundingVolume((CollisionVolume*)volume);
+	wallFront->GetTransform()
+		.SetScale(wallSize * 2)
+		.SetPosition(Vector3(0, 5, -200));
+
+	wallFront->SetRenderObject(new RenderObject(&wallFront->GetTransform(), cubeMesh, basicTex, basicShader));
+	wallFront->SetPhysicsObject(new PhysicsObject(&wallFront->GetTransform(), wallFront->GetBoundingVolume()));
+
+	wallFront->GetPhysicsObject()->SetInverseMass(0);
+	wallFront->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(wallFront);
+
+	return wallFront;
+}
+GameObject* TutorialGame::AddBackWallToWorld() 
+{
+	GameObject* wallBack = new GameObject(1, "WALL");
+
+	Vector3 wallSize = Vector3(200, 10, 2);
+	AABBVolume* volume = new AABBVolume(wallSize);
+	wallBack->SetBoundingVolume((CollisionVolume*)volume);
+	wallBack->GetTransform()
+		.SetScale(wallSize * 2)
+		.SetPosition(Vector3(0, 5, 200));
+
+	wallBack->SetRenderObject(new RenderObject(&wallBack->GetTransform(), cubeMesh, basicTex, basicShader));
+	wallBack->SetPhysicsObject(new PhysicsObject(&wallBack->GetTransform(), wallBack->GetBoundingVolume()));
+
+	wallBack->GetPhysicsObject()->SetInverseMass(0);
+	wallBack->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(wallBack);
+
+	return wallBack;
 }
 
 /*
@@ -409,7 +499,7 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfH
 GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
 	GameObject* cube = new GameObject(2, "CUBE");
 
-	OBBVolume* volume = new OBBVolume(dimensions);
+	AABBVolume* volume = new AABBVolume(dimensions);
 
 	cube->SetBoundingVolume((CollisionVolume*)volume);
 
@@ -556,25 +646,89 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 
 	return apple;
 }
-StateGameObject* TutorialGame::AddStateObjectToWorld(const Vector3& position)
+
+GameObject* TutorialGame::AddPlayerBallToWorld(const Vector3& position, const float radius) {
+	GameObject* sphere = new GameObject(2, "PLAYER BALL", PLAYER_OBJECT);
+
+	Vector3 sphereSize = Vector3(radius, radius, radius);
+	SphereVolume* volume = new SphereVolume(false, radius);
+	sphere->SetBoundingVolume((CollisionVolume*)volume);
+
+	sphere->GetTransform()
+		.SetScale(sphereSize)
+		.SetPosition(position);
+
+	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, nullptr, basicShader));
+	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
+
+	sphere->GetPhysicsObject()->SetElasticity(0.9f);
+
+	sphere->GetPhysicsObject()->SetInverseMass(1.0f);
+	sphere->GetPhysicsObject()->InitSphereInertia(volume->GetHollow());
+
+	world->AddGameObject(sphere);
+
+	return sphere;
+}
+StateGameObject* TutorialGame::AddStateSphereObjectToWorld(const Vector3& position, const float radius)
 {
-	StateGameObject* apple = new StateGameObject();
+	StateGameObject* sphere = new StateGameObject();
+
+	SphereVolume* volume = new SphereVolume(radius);
+	sphere->SetBoundingVolume((CollisionVolume*)volume);
+	sphere->GetTransform()
+		.SetScale(Vector3(radius, radius, radius))
+		.SetPosition(position);
+
+	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, basicTex, basicShader));
+	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
+
+	sphere->GetPhysicsObject()->SetInverseMass(1.0f);
+	sphere->GetPhysicsObject()->InitSphereInertia(false);
+
+	world->AddGameObject(sphere);
+
+	return sphere;
+}
+StateGameObject* TutorialGame::AddStateCubeObjectToWorld(const Vector3& position, const Vector3 size)
+{
+	StateGameObject* cube = new StateGameObject();
+
+	AABBVolume* volume = new AABBVolume(size);
+	cube->SetBoundingVolume((CollisionVolume*)volume);
+	cube->GetTransform()
+		.SetScale(Vector3(size))
+		.SetPosition(position);
+
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
+
+	cube->GetPhysicsObject()->SetInverseMass(1.0f);
+	cube->GetPhysicsObject()->InitSphereInertia(false);
+
+	world->AddGameObject(cube);
+
+	return cube;
+}
+StateGameObject* TutorialGame::AddStateBonusObjectToWorld(const Vector3& position)
+{
+	StateGameObject* bonus = new StateGameObject();
 
 	SphereVolume* volume = new SphereVolume(0.25f);
-	apple->SetBoundingVolume((CollisionVolume*)volume);
-	apple->GetTransform()
+	bonus->SetBoundingVolume((CollisionVolume*)volume);
+	bonus->GetTransform()
 		.SetScale(Vector3(0.25, 0.25, 0.25))
 		.SetPosition(position);
 
-	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, nullptr, basicShader));
-	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
+	bonus->SetRenderObject(new RenderObject(&bonus->GetTransform(), bonusMesh, nullptr, basicShader));
+	bonus->SetPhysicsObject(new PhysicsObject(&bonus->GetTransform(), bonus->GetBoundingVolume()));
 
-	apple->GetPhysicsObject()->SetInverseMass(1.0f);
-	apple->GetPhysicsObject()->InitSphereInertia(false);
+	bonus->GetPhysicsObject()->SetInverseMass(1.0f);
+	bonus->GetPhysicsObject()->InitSphereInertia(false);
 
-	world->AddGameObject(apple);
+	world->AddGameObject(bonus);
 
-	return apple;
+	return bonus;
 }
 
 /*
@@ -615,7 +769,7 @@ bool TutorialGame::SelectObject() {
 				selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 
 				////////////////////////////////////////// - Tutorial 1 further work
-				Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Vector4(1, 0, 0, 1), 10);
+				/*Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Vector4(1, 0, 0, 1), 10);
 
 				Vector3 position = selectionObject->GetTransform().GetPosition();
 
@@ -630,7 +784,7 @@ bool TutorialGame::SelectObject() {
 					((GameObject*) nextClosestCollision.node)->GetRenderObject()->SetColour(Vector4(0, 0, 1, 1));
 				}
 
-				selectionObject->SetLayer(tempLayer);
+				selectionObject->SetLayer(tempLayer);*/
 				//////////////////////////////////////////
 
 				return true;
@@ -643,13 +797,21 @@ bool TutorialGame::SelectObject() {
 	else {
 		renderer->DrawString("Press Q to change to select mode!", Vector2(5, 85));
 	}
+	
 
 	if (lockedObject) {
-		renderer->DrawString("Press L to unlock object!", Vector2(5, 80));
+		renderer->DrawString("Press L to unlock object!", Vector2(5, 75));
 	}
 
 	else if(selectionObject){
-		renderer->DrawString("Press L to lock selected object object!", Vector2(5, 80));
+		renderer->DrawString("Press L to lock selected object!", Vector2(5, 75));
+
+		string text = selectionObject->GetName();
+		text += ", Centre Pos: (" + std::to_string((int)selectionObject->GetTransform().GetPosition().x) + ',' + std::to_string((int)selectionObject->GetTransform().GetPosition().y) + ',' + std::to_string((int)selectionObject->GetTransform().GetPosition().z) + ')';
+		renderer->DrawString(text, Vector2(5, 65));
+		text = "Orientation: (" + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().x) + ',' + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().y) + ',' + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().z) + ')';
+		text += ", State: " + selectionObject->GetState();
+		renderer->DrawString(text, Vector2(5, 70));
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::L)) {
@@ -677,8 +839,8 @@ void TutorialGame::MoveSelectedObject() {
 	renderer->DrawString("Click Force: " + std::to_string(forceMagnitude), Vector2(10, 20)); // Draw debug text at 10,20
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
 
-	if (!selectionObject)
-		return; // we havent selected anything
+	if (!selectionObject || selectionObject->GetName() == "PLAYER BALL")
+		return; // we havent selected anything or it is player ball
 
 	// Push the selected object
 	if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::RIGHT))

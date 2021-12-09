@@ -208,7 +208,6 @@ class PauseScreen : public PushdownState
 {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override
 	{
-		std::cout << "PAUSED" << std::endl;
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::U))
 		{
 			return PushdownResult::Pop;
@@ -227,8 +226,8 @@ class Game1 : public PushdownState
 			*newState = new PauseScreen();
 			return PushdownResult::Push;
 		}
-		Debug::Print("PRESS 0 TO RETURN TO MENU", Vector2(5, 80));
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM0))
+		Debug::Print("PRESS ESCAPE TO RETURN TO MENU", Vector2(5, 80));
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE))
 		{
 			return PushdownResult::Pop;
 		}
@@ -253,8 +252,8 @@ class Game2 : public PushdownState
 			*newState = new PauseScreen();
 			return PushdownResult::Push;
 		}
-		Debug::Print("PRESS 0 TO RETURN TO MENU", Vector2(5, 80));
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM0))
+		Debug::Print("PRESS ESCAPE TO RETURN TO MENU", Vector2(5, 80));
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE))
 		{
 			return PushdownResult::Pop;
 		}
@@ -326,7 +325,7 @@ int main() {
 	//TestPathfinding();
 	PushdownMachine machine(new IntroScreen());
 
-	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE)) 
+	while (w->UpdateWindow()) 
 	{		
 		//DisplayPathfinding();
 

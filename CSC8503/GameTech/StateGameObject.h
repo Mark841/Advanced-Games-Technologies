@@ -9,7 +9,7 @@ namespace NCL
 		class StateGameObject : public GameObject
 		{
 		public:
-			StateGameObject();
+			StateGameObject(int layer = 0, string name = "");
 			~StateGameObject();
 
 			virtual void Update(float dt);

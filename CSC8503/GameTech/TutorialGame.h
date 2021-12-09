@@ -38,6 +38,11 @@ namespace NCL {
 			void LockedObjectMovement();
 
 			GameObject* AddFloorToWorld(const Vector3& position);
+			void AddWallsToFloor();
+			GameObject* AddLeftWallToWorld();
+			GameObject* AddRightWallToWorld();
+			GameObject* AddFrontWallToWorld();
+			GameObject* AddBackWallToWorld();
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
 			
@@ -47,7 +52,10 @@ namespace NCL {
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
 
-			StateGameObject* AddStateObjectToWorld(const Vector3& position);
+			GameObject* AddPlayerBallToWorld(const Vector3& position, const float radius);
+			StateGameObject* AddStateSphereObjectToWorld(const Vector3& position, const float radius);
+			StateGameObject* AddStateCubeObjectToWorld(const Vector3& position, const Vector3 size);
+			StateGameObject* AddStateBonusObjectToWorld(const Vector3& position);
 			StateGameObject* testStateObject;
 
 			GameTechRenderer*	renderer;
