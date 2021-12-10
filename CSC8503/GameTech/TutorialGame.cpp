@@ -840,7 +840,7 @@ void TutorialGame::MoveSelectedObject() {
 	renderer->DrawString("Click Force: " + std::to_string(forceMagnitude), Vector2(10, 20)); // Draw debug text at 10,20
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
 
-	if (!selectionObject || selectionObject->GetName() == "PLAYER BALL")
+	if (!selectionObject || selectionObject->GetName() == "PLAYER BALL" || selectionObject->GetLayer() == 0)
 		return; // we havent selected anything or it is player ball
 
 	// Push the selected object

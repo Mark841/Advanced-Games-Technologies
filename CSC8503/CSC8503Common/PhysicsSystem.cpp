@@ -201,10 +201,11 @@ void PhysicsSystem::BasicCollisionDetection() {
 		{
 			if ((*j)->GetPhysicsObject() == nullptr)
 				continue;
+			if ((*i)->GetLayer() == 0 && (*j)->GetLayer() == 0)
+				continue;
 			CollisionDetection::CollisionInfo info;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info))
 			{
-				std::cout << "Collision between " << (*i)->GetName() << " and " << (*j)->GetName() << std::endl;
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
@@ -268,18 +269,21 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 
 	/////// Friction
 	float cFriction = (physA->GetFriction() + physB->GetFriction()) / 2;
-	Vector3 frictionTangent = cRestitution - (p.normal*(Vector3::Dot(contactVelocity, p.normal)));
+	Vector3 frictionTangent = contactVelocity - (p.normal*(Vector3::Dot(contactVelocity, p.normal)));
 
-	Vector3 inertiaA = Vector3::Cross(physA->GetInertiaTensor() * Vector3::Cross(relativeA, frictionTangent), relativeA);
-	Vector3 inertiaB = Vector3::Cross(physB->GetInertiaTensor() * Vector3::Cross(relativeB, frictionTangent), relativeB);
+	Vector3 frictionInertiaA = Vector3::Cross(physA->GetInertiaTensor() * Vector3::Cross(relativeA, frictionTangent), relativeA);
+	Vector3 frictionInertiaB = Vector3::Cross(physB->GetInertiaTensor() * Vector3::Cross(relativeB, frictionTangent), relativeB);
 
-	float angularEffect = Vector3::Dot(inertiaA + inertiaB, frictionTangent);
-	float frictionImpulse = (-(Vector3::Dot(contactVelocity * cFriction, frictionTangent))) / (totalMass + angularEffect);
+	float frictionAngularEffect = Vector3::Dot(frictionInertiaA + frictionInertiaB, frictionTangent);
+	float jt = -(Vector3::Dot(contactVelocity, frictionTangent) * cFriction) / (totalMass + frictionAngularEffect);
+	Vector3 frictionImpulse = frictionTangent * jt;
 
-	physA->ApplyLinearImpulse(-frictionImpulse);
-	physB->ApplyLinearImpulse(frictionImpulse);
 	physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -frictionImpulse));
 	physB->ApplyAngularImpulse(Vector3::Cross(relativeB, frictionImpulse));
+
+	// Apply linear impulse conditionally for if objects are icy or sticky
+	//physA->ApplyLinearImpulse(-frictionImpulse);
+	//physB->ApplyLinearImpulse(frictionImpulse);
 }
 
 /*
@@ -316,6 +320,8 @@ void PhysicsSystem::BroadPhase() {
 			{
 				for (auto j = std::next(i); j != data.end(); ++j)
 				{ // is this pair of items already in the collision set - if the same pair of is in another quadtree node together etc
+					if ((*i).object->GetLayer() == 0 && (*j).object->GetLayer() == 0)
+						continue;
 					info.a = min((*i).object, (*j).object);
 					info.b = max((*i).object, (*j).object);
 					broadPhaseCollisions.insert(info);

@@ -271,6 +271,7 @@ class IntroScreen : public PushdownState
 {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override
 	{
+		Debug::Print("CSC8503 Advanced Game Tech", Vector2(25, 40));
 		Debug::Print("LAUNCH LEVEL 1: (PRESS 1)", Vector2(25, 50));
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1))
 		{
