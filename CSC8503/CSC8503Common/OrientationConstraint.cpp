@@ -7,30 +7,13 @@ void OrientationConstraint::UpdateConstraint(float dt)
 {
 	Quaternion aRotation = objectA->GetTransform().GetOrientation();
 	Quaternion bRotation = objectB->GetTransform().GetOrientation();
-	Vector3 rotateDifference = (bRotation.ToEuler()) - aRotation.ToEuler();
 
-	Quaternion relativeOrientation = objectA->GetTransform().GetOrientation() - objectB->GetTransform().GetOrientation();
-	Vector3 offset = relativeOrientation.ToEuler();
+	Vector3 offset = (bRotation.ToEuler()) - aRotation.ToEuler();
+	Quaternion relativeOrientation = aRotation - bRotation;
 
 
 	if (abs(offset.x) > 0.01f || abs(offset.y) > 0.01f || abs(offset.z) > 0.01f)
-	{
-		if (rotateDifference.x > angle)
-		{
-			offset.x = rotateDifference.x - angle;
-		}
-		if (rotateDifference.y > angle)
-		{
-			offset.y = rotateDifference.y - angle;
-		}
-		if (rotateDifference.z > angle)
-		{
-			offset.z = rotateDifference.z - angle;
-		}
-		
-		//objectA->GetTransform().SetOrientation(aRotation + Quaternion(offset, aRotation.w));
-		//objectB->GetTransform().SetOrientation(bRotation + Quaternion(-offset, bRotation.w));
-
+	{		
 		PhysicsObject* physA = objectA->GetPhysicsObject();
 		PhysicsObject* physB = objectB->GetPhysicsObject();
 
@@ -47,8 +30,6 @@ void OrientationConstraint::UpdateConstraint(float dt)
 		float lambda = -(velocityDot + bias) / constraintMass;
 
 		Vector3 aImpulse = offsetAngle * lambda * dt;
-		// - will filp the corners of rotation from front left to back right, but i need to swap from front left to front right
-		//Vector3 bImpulse = Vector3(-offsetAngle.x, offsetAngle.y, -offsetAngle.z) * lambda * dt;
 		Vector3 bImpulse = -offsetAngle * lambda * dt;
 
 		physA->ApplyAngularImpulse(aImpulse);
