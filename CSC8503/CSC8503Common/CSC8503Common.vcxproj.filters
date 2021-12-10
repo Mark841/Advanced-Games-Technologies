@@ -120,6 +120,9 @@
     <ClInclude Include="BehaviourAction.h">
       <Filter>AI</Filter>
     </ClInclude>
+    <ClInclude Include="OrientationConstraint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameWorld.cpp">
@@ -169,6 +172,9 @@
     </ClCompile>
     <ClCompile Include="OctTree.cpp">
       <Filter>CollisionDetection</Filter>
+    </ClCompile>
+    <ClCompile Include="OrientationConstraint.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

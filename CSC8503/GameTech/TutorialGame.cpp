@@ -1,6 +1,7 @@
 #include "TutorialGame.h"
 #include "../CSC8503Common/GameWorld.h"
 #include "../CSC8503Common/PositionConstraint.h"
+#include "../CSC8503Common/OrientationConstraint.h"
 #include "../../Plugins/OpenGLRendering/OGLMesh.h"
 #include "../../Plugins/OpenGLRendering/OGLShader.h"
 #include "../../Plugins/OpenGLRendering/OGLTexture.h"
@@ -306,6 +307,7 @@ void TutorialGame::BridgeConstraintTest() {
 	float invCubeMass = 5; // how heavy the middle pieces are
 	int numLinks = 10;
 	float maxDistance = 22; // constraint distance
+	float maxAngle = 10; // constraint rotation
 	float cubeDistance = 20; // distance between links
 
 	Vector3 startPos = Vector3(50, 50, 50);
@@ -318,9 +320,11 @@ void TutorialGame::BridgeConstraintTest() {
 	for (int i = 0; i < numLinks; ++i)
 	{
 		GameObject* block = AddCubeToWorld(startPos + Vector3((i + 1) * cubeDistance, 0, 0), cubeSize, invCubeMass);
-		PositionConstraint* constraint = new PositionConstraint(previous, block, maxDistance);
+		PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
+		OrientationConstraint* orientConstraint = new OrientationConstraint(previous, block, maxAngle);
 
-		world->AddConstraint(constraint);
+		world->AddConstraint(posConstraint);
+		world->AddConstraint(orientConstraint);
 		previous = block;
 	}
 	PositionConstraint* constraint = new PositionConstraint(previous, end, maxDistance);
