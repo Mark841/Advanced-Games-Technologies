@@ -53,9 +53,9 @@ namespace NCL {
 			GameObject* AddBonusToWorld(const Vector3& position);
 
 			GameObject* AddPlayerBallToWorld(const Vector3& position, const float radius);
-			StateGameObject* AddStateSphereObjectToWorld(const Vector3& position, const float radius);
-			StateGameObject* AddStateCubeObjectToWorld(const Vector3& position, const Vector3 size);
-			StateGameObject* AddStateBonusObjectToWorld(const Vector3& position);
+			StateGameObject* AddStateSphereObjectToWorld(const Vector3& position, const float radius, float inverseMass);
+			StateGameObject* AddStateCubeObjectToWorld(const Vector3& position, const Vector3 size, float inverseMass);
+			StateGameObject* AddStateBonusObjectToWorld(const Vector3& position, float inverseMass);
 			StateGameObject* testStateObject;
 
 			GameTechRenderer*	renderer;

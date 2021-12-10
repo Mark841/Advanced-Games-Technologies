@@ -119,6 +119,7 @@ bool CollisionDetection::RayCapsuleIntersection(const Ray& r, const Transform& w
 	Vector3 topCentre = position + (orientation * Vector3(0, 1, 0) * (volume.GetHalfHeight() - volume.GetRadius()));
 	Vector3 bottomCentre = position - (orientation * Vector3(0, 1, 0) * (volume.GetHalfHeight() - volume.GetRadius()));
 
+	// Appears to only like capsule ray collisions if from one direction on capsule so maybe its normal is wrong
 	Vector3 normal = Vector3::Cross((bottomCentre - topCentre), (r.GetPosition() - topCentre));
 	float distance = Vector3::Dot(normal, r.GetPosition());
 
@@ -426,7 +427,7 @@ bool CollisionDetection::AABBTest(const Vector3& posA, const Vector3& posB, cons
 	return false;
 }
 
-//AABB/AABB Collisions
+//AABB / AABB Collisions
 bool CollisionDetection::AABBIntersection(const AABBVolume& volumeA, const Transform& worldTransformA,
 	const AABBVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
 	Vector3 boxAPos = worldTransformA.GetPosition();
@@ -532,7 +533,7 @@ bool CollisionDetection::OBBIntersection(const OBBVolume& volumeA, const Transfo
 	const OBBVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
 	return false;
 }
-// TO DO
+// Sphere / OBB
 bool CollisionDetection::SphereOBBIntersection(const OBBVolume& volumeA, const Transform& worldTransformA,
 	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo)
 {

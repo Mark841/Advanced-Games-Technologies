@@ -270,11 +270,13 @@ void TutorialGame::InitWorld1() {
 	BridgeConstraintTest();
 
 	AddPlayerBallToWorld(Vector3(90, 60, 50), 4.0f);
+	AddStateCubeObjectToWorld(Vector3(0,0,0), Vector3(5,2,1), 0);
 }
 void TutorialGame::InitWorld2() {
 	world->ClearAndErase();
 	physics->Clear();
 
+	InitMixedGridWorld(5,5,5,5);
 	InitDefaultFloor();
 	AddWallsToFloor();
 
@@ -307,7 +309,7 @@ void TutorialGame::BridgeConstraintTest() {
 	float invCubeMass = 5; // how heavy the middle pieces are
 	int numLinks = 10;
 	float maxDistance = 22; // constraint distance
-	float maxAngle = 10; // constraint rotation
+	float maxAngle = 5; // constraint rotation
 	float cubeDistance = 20; // distance between links
 
 	Vector3 startPos = Vector3(50, 50, 50);
@@ -675,7 +677,7 @@ GameObject* TutorialGame::AddPlayerBallToWorld(const Vector3& position, const fl
 
 	return sphere;
 }
-StateGameObject* TutorialGame::AddStateSphereObjectToWorld(const Vector3& position, const float radius)
+StateGameObject* TutorialGame::AddStateSphereObjectToWorld(const Vector3& position, const float radius, float inverseMass)
 {
 	StateGameObject* sphere = new StateGameObject();
 
@@ -688,14 +690,14 @@ StateGameObject* TutorialGame::AddStateSphereObjectToWorld(const Vector3& positi
 	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, basicTex, basicShader));
 	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
 
-	sphere->GetPhysicsObject()->SetInverseMass(1.0f);
+	sphere->GetPhysicsObject()->SetInverseMass(inverseMass);
 	sphere->GetPhysicsObject()->InitSphereInertia(false);
 
 	world->AddGameObject(sphere);
 
 	return sphere;
 }
-StateGameObject* TutorialGame::AddStateCubeObjectToWorld(const Vector3& position, const Vector3 size)
+StateGameObject* TutorialGame::AddStateCubeObjectToWorld(const Vector3& position, const Vector3 size, float inverseMass)
 {
 	StateGameObject* cube = new StateGameObject();
 
@@ -708,14 +710,14 @@ StateGameObject* TutorialGame::AddStateCubeObjectToWorld(const Vector3& position
 	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
 	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
 
-	cube->GetPhysicsObject()->SetInverseMass(1.0f);
+	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
 	cube->GetPhysicsObject()->InitSphereInertia(false);
 
 	world->AddGameObject(cube);
 
 	return cube;
 }
-StateGameObject* TutorialGame::AddStateBonusObjectToWorld(const Vector3& position)
+StateGameObject* TutorialGame::AddStateBonusObjectToWorld(const Vector3& position, float inverseMass)
 {
 	StateGameObject* bonus = new StateGameObject();
 
@@ -728,7 +730,7 @@ StateGameObject* TutorialGame::AddStateBonusObjectToWorld(const Vector3& positio
 	bonus->SetRenderObject(new RenderObject(&bonus->GetTransform(), bonusMesh, nullptr, basicShader));
 	bonus->SetPhysicsObject(new PhysicsObject(&bonus->GetTransform(), bonus->GetBoundingVolume()));
 
-	bonus->GetPhysicsObject()->SetInverseMass(1.0f);
+	bonus->GetPhysicsObject()->SetInverseMass(inverseMass);
 	bonus->GetPhysicsObject()->InitSphereInertia(false);
 
 	world->AddGameObject(bonus);

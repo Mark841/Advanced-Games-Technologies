@@ -15,8 +15,12 @@ namespace NCL
 			virtual void Update(float dt);
 
 		protected:
+			void InitMoving();
+			void InitRotating();
 			void MoveLeft(float dt);
 			void MoveRight(float dt);
+			void RotateLeft(float dt);
+			void RotateRight(float dt);
 
 			StateMachine* stateMachine;
 			float counter;
