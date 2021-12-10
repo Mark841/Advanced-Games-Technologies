@@ -34,9 +34,5 @@ void OrientationConstraint::UpdateConstraint(float dt)
 
 		physA->ApplyAngularImpulse(aImpulse);
 		physB->ApplyAngularImpulse(bImpulse);
-
 	}
-	// Always tend towards being flat
-	objectA->GetPhysicsObject()->ApplyAngularImpulse((Vector3(0, 0, 0) - aRotation.ToEuler()) * dt);
-	objectB->GetPhysicsObject()->ApplyAngularImpulse((Vector3(0, 0, 0) - bRotation.ToEuler()) * dt);
 }
