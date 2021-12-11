@@ -285,6 +285,11 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	//physA->ApplyLinearImpulse(-frictionImpulse);
 	//physB->ApplyLinearImpulse(frictionImpulse);
 }
+// TO DO
+void PhysicsSystem::ResolveSpringCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const 
+{
+
+}
 
 /*
 

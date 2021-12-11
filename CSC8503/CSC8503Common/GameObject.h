@@ -23,7 +23,7 @@ namespace NCL {
 
 		class GameObject	{
 		public:
-			GameObject(int layer = 0, string name = "", States state = States::NO_STATE, Vector4 baseColour = Vector4(1,1,1,1));
+			GameObject(int layer = 0, string name = "", States state = States::NO_STATE, Vector4 baseColour = Vector4(1,1,1,1), bool moveable = false, GameObject* attachSpring = nullptr);
 			~GameObject();
 
 			void SetBoundingVolume(CollisionVolume* vol) {
@@ -49,6 +49,9 @@ namespace NCL {
 			PhysicsObject* GetPhysicsObject() const {
 				return physicsObject;
 			}
+			bool GetPlayerMoveable() const {
+				return playerMoveable;
+			}
 
 			virtual void Update(float dt) {}
 
@@ -58,6 +61,15 @@ namespace NCL {
 
 			void SetPhysicsObject(PhysicsObject* newObject) {
 				physicsObject = newObject;
+			}
+			bool HasSpringObject() {
+				 return (attachedSpring == nullptr) ? false : true;
+			}
+			void AttachSpringObject(GameObject* otherObject, float springLength, float springSnappiness, float springDampingConstant) {
+				attachedSpring = otherObject;
+				this->springLength = springLength;
+				this->springSnappiness = springSnappiness;
+				this->springDampingConstant = springDampingConstant;
 			}
 
 			Vector4 GetBaseColour() const {
@@ -119,9 +131,17 @@ namespace NCL {
 			bool	isActive;
 			int		worldID;
 			int layer;
+			bool playerMoveable;
 			string	name;
 			States state;
 			Vector4 baseColour;
+
+			// Variables to store spring information
+			GameObject* attachedSpring;
+			// Set spring resting length between 2 centres
+			float springLength;
+			float springSnappiness;
+			float springDampingConstant;
 
 			Vector3 broadphaseAABB;
 		};

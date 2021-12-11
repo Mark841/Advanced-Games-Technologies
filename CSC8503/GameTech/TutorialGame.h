@@ -43,22 +43,36 @@ namespace NCL {
 			GameObject* AddRightWallToWorld();
 			GameObject* AddFrontWallToWorld();
 			GameObject* AddBackWallToWorld();
+			void AddWallSeperators();
+			GameObject* AddWallToWorld(const Vector3& position, const Vector3& size);
+			GameObject* AddStartToWorld(const Vector3& position, const Vector3& size);
+			GameObject* AddFinishToWorld(const Vector3& position, const Vector3& size);
 
-			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f, Vector4 baseColour = Vector4(1,1,1,1));
-			GameObject* AddAABBCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, Vector4 baseColour = Vector4(1, 1, 1, 1));
-			GameObject* AddOBBCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, Vector4 baseColour = Vector4(1, 1, 1, 1));
+			void RampObstacles();
+			void TiltingConstraintObstacles();
+			void SpinningObstacles(const Vector3& centrePosition);
+			void AddFlickerObjects(const Vector3& centrePosition);
+
+
+			GameObject* AddSphereToWorld(int layer, const Vector3& position, float radius, float inverseMass = 10.0f, bool moveable = false, Vector4 baseColour = Vector4(1,1,1,1));
+			GameObject* AddAABBCubeToWorld(int layer, const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, bool moveable = false, Vector4 baseColour = Vector4(1, 1, 1, 1));
+			GameObject* AddOBBCubeToWorld(int layer, const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, bool moveable = false, Vector4 baseColour = Vector4(1, 1, 1, 1));
 			
-			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f, Vector4 baseColour = Vector4(1, 1, 1, 1));
+			GameObject* AddCapsuleToWorld(int layer, const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f, bool moveable = false, Vector4 baseColour = Vector4(1, 1, 1, 1));
 
-			GameObject* AddPlayerToWorld(const Vector3& position);
-			GameObject* AddEnemyToWorld(const Vector3& position);
-			GameObject* AddBonusToWorld(const Vector3& position);
+			GameObject* AddPlayerToWorld(int layer, const Vector3& position);
+			GameObject* AddEnemyToWorld(int layer, const Vector3& position);
+			GameObject* AddBonusToWorld(int layer, const Vector3& position);
 
-			GameObject* AddPlayerBallToWorld(const Vector3& position, const float radius);
-			void AddBallFlicker(const Vector3& position, bool onLeft);
-			StateGameObject* AddStateSphereObjectToWorld(const ObjectMovement movement, const Vector3& position, const float radius, float inverseMass);
-			StateGameObject* AddStateCubeObjectToWorld(const ObjectMovement movement, const Vector3& position, const Vector3 size, float inverseMass);
-			StateGameObject* AddStateBonusObjectToWorld(const ObjectMovement movement, const Vector3& position, float inverseMass);
+			GameObject* AddPlayerBallToWorld(int layer, const Vector3& position, const float radius);
+			void AddBallFlickerHorizontal(int layer, const Vector3& position, bool onLeft);
+			void AddBallFlickerVertical(int layer, const Vector3& position, bool above);
+			void AddBallPusherXAxis(int layer, const Vector3& position);
+			void AddBallPusherZAxis(int layer, const Vector3& position);
+			
+			StateGameObject* AddStateSphereObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const float radius, float inverseMass);
+			StateGameObject* AddStateCubeObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const Vector3 size, float inverseMass);
+			StateGameObject* AddStateBonusObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, float inverseMass);
 
 			GameTechRenderer*	renderer;
 			PhysicsSystem*		physics;
@@ -69,6 +83,7 @@ namespace NCL {
 			bool inSelectionMode;
 			int level;
 			float totalTime;
+			Vector4 moveableObjectColour = Vector4(0.5f, 1, 0.5f, 1);
 
 			float		forceMagnitude;
 

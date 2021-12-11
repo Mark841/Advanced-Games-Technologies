@@ -3,7 +3,7 @@
 
 using namespace NCL::CSC8503;
 
-GameObject::GameObject(int layer, string objectName, States state, Vector4 baseColour)	{
+GameObject::GameObject(int layer, string objectName, States state, Vector4 baseColour, bool moveable, GameObject* attachSpring)	{
 	name			= objectName;
 	worldID			= -1;
 	isActive		= true;
@@ -13,6 +13,12 @@ GameObject::GameObject(int layer, string objectName, States state, Vector4 baseC
 	this->layer = layer;
 	this->state = state;
 	this->baseColour = baseColour;
+	this->playerMoveable = moveable;
+
+	attachedSpring = attachSpring;
+	springLength = 0.0f;
+	springSnappiness = 0.0f;
+	springDampingConstant = 0.0f;
 }
 
 GameObject::~GameObject()	{

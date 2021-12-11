@@ -74,7 +74,7 @@ void StateGameObject::InitRotating()
 
 	stateMachine->AddTransition(new StateTransition(stateA, stateB, [&](void)->bool
 		{
-			return this->counter > 9.0f;
+			return this->counter > 5.0f;
 		}));
 	stateMachine->AddTransition(new StateTransition(stateB, stateA, [&](void)->bool
 		{
@@ -96,13 +96,13 @@ void StateGameObject::MoveRight(float dt)
 }
 void StateGameObject::RotateAnticlockwise(float dt)
 {
-	GetPhysicsObject()->ApplyAngularImpulse({ 0,2,0 });
+	GetPhysicsObject()->SetAngularVelocity({ 0,4,0 });
 	this->SetState(States::ROTATING_ANTICLOCKWISE);
 	counter += dt;
 }
 void StateGameObject::RotateClockwise(float dt)
 {
-	GetPhysicsObject()->ApplyAngularImpulse({ 0,-2,0 });
+	GetPhysicsObject()->SetAngularVelocity({ 0,-4,0 });
 	this->SetState(States::ROTATING_CLOCKWISE);
 	counter -= dt;
 }
