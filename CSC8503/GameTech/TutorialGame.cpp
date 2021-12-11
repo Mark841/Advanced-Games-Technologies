@@ -268,7 +268,8 @@ void TutorialGame::InitWorld1() {
 	AddWallsToFloor();
 	AddWallSeperators();
 
-	BridgeConstraintTest();
+	ZAxisBridgeConstraintTest(Vector3(-50, 50, -150));
+	XAxisBridgeConstraintTest(Vector3(50, 50, -50));
 
 	AddPlayerBallToWorld(2, Vector3(-150, 5, 150), 4.0f);
 	AddStartToWorld(Vector3(-150, 0, 150), Vector3(10, 1, 10));
@@ -316,16 +317,16 @@ void TutorialGame::DrawTextDebugs()
 	}
 }
 
-void TutorialGame::BridgeConstraintTest() {
+void TutorialGame::XAxisBridgeConstraintTest(const Vector3& position) {
 	Vector3 cubeSize = Vector3(8, 4, 8);
 
-	float invCubeMass = 5; // how heavy the middle pieces are
+	float invCubeMass = 50; // how heavy the middle pieces are
 	int numLinks = 10;
 	float maxDistance = 22; // constraint distance
 	float maxAngle = 15; // constraint rotation
 	float cubeDistance = 20; // distance between links
 
-	Vector3 startPos = Vector3(50, 50, 50);
+	Vector3 startPos = position;
 
 	GameObject* start = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, 0), cubeSize, 0);
 	GameObject* end = AddAABBCubeToWorld(2, startPos + Vector3((numLinks + 2) * cubeDistance, 0, 0), cubeSize, 0);
@@ -335,6 +336,37 @@ void TutorialGame::BridgeConstraintTest() {
 	for (int i = 0; i < numLinks; ++i)
 	{
 		GameObject* block = AddOBBCubeToWorld(2, startPos + Vector3((i + 1) * cubeDistance, 0, 0), cubeSize, invCubeMass, true, moveableObjectColour);
+		block->GetRenderObject()->SetColour(moveableObjectColour);
+		PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
+		SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::PITCH);
+		//OrientationConstraint* orientConstraint = new OrientationConstraint(previous, block, maxAngle);
+
+		world->AddConstraint(posConstraint);
+		world->AddConstraint(orientConstraint);
+		previous = block;
+	}
+	PositionConstraint* constraint = new PositionConstraint(previous, end, maxDistance);
+	world->AddConstraint(constraint);
+}
+void TutorialGame::ZAxisBridgeConstraintTest(const Vector3& position) {
+	Vector3 cubeSize = Vector3(8, 4, 5);
+
+	float invCubeMass = 50; // how heavy the middle pieces are
+	int numLinks = 10;
+	float maxDistance = 11; // constraint distance
+	float maxAngle = 15; // constraint rotation
+	float cubeDistance = 10; // distance between links
+
+	Vector3 startPos = position;
+
+	GameObject* start = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, 0), cubeSize, 0);
+	GameObject* end = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, (numLinks + 2) * cubeDistance), cubeSize, 0);
+
+	GameObject* previous = start;
+
+	for (int i = 0; i < numLinks; ++i)
+	{
+		GameObject* block = AddOBBCubeToWorld(2, startPos + Vector3(0, 0, (i + 1) * cubeDistance), cubeSize, invCubeMass, true, moveableObjectColour);
 		block->GetRenderObject()->SetColour(moveableObjectColour);
 		PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
 		SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::ROLL);
