@@ -8,9 +8,7 @@ void OrientationConstraint::UpdateConstraint(float dt)
 	Quaternion aRotation = objectA->GetTransform().GetOrientation();
 	Quaternion bRotation = objectB->GetTransform().GetOrientation();
 
-	Vector3 offset = (bRotation.ToEuler()) - aRotation.ToEuler();
-	Quaternion relativeOrientation = aRotation - bRotation;
-
+	Vector3 offset = bRotation.ToEuler() - aRotation.ToEuler();
 
 	if (abs(offset.x) > 0.01f || abs(offset.y) > 0.01f || abs(offset.z) > 0.01f)
 	{		

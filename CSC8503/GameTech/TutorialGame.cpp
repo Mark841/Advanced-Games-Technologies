@@ -2,6 +2,7 @@
 #include "../CSC8503Common/GameWorld.h"
 #include "../CSC8503Common/PositionConstraint.h"
 #include "../CSC8503Common/OrientationConstraint.h"
+#include "../CSC8503Common/SingleAxisOrientationConstraint.h"
 #include "../../Plugins/OpenGLRendering/OGLMesh.h"
 #include "../../Plugins/OpenGLRendering/OGLShader.h"
 #include "../../Plugins/OpenGLRendering/OGLTexture.h"
@@ -79,9 +80,6 @@ void TutorialGame::UpdateGame(float dt) {
 		totalTime += dt;
 		if (!inSelectionMode) {
 			world->GetMainCamera()->UpdateCamera(dt);
-		}
-		if (testStateObject) {
-			testStateObject->Update(dt);
 		}
 
 		UpdateKeys();
@@ -268,9 +266,11 @@ void TutorialGame::InitWorld1() {
 	InitDefaultFloor();
 
 	BridgeConstraintTest();
+	AddBallFlicker(Vector3(0,10,0), true);
+	AddBallFlicker(Vector3(80,10,0), false);
 
-	AddPlayerBallToWorld(Vector3(90, 60, 50), 4.0f);
-	AddStateCubeObjectToWorld(Vector3(0,0,0), Vector3(5,2,1), 0);
+	AddPlayerBallToWorld(Vector3(-150, 5, 150), 4.0f);
+	AddStateCubeObjectToWorld(ObjectMovement::ROTATING, Vector3(50,0,-50), Vector3(30,10,2), 1.0f);
 }
 void TutorialGame::InitWorld2() {
 	world->ClearAndErase();
@@ -309,21 +309,22 @@ void TutorialGame::BridgeConstraintTest() {
 	float invCubeMass = 5; // how heavy the middle pieces are
 	int numLinks = 10;
 	float maxDistance = 22; // constraint distance
-	float maxAngle = 5; // constraint rotation
+	float maxAngle = 15; // constraint rotation
 	float cubeDistance = 20; // distance between links
 
 	Vector3 startPos = Vector3(50, 50, 50);
 
-	GameObject* start = AddCubeToWorld(startPos + Vector3(0, 0, 0), cubeSize, 0);
-	GameObject* end = AddCubeToWorld(startPos + Vector3((numLinks + 2) * cubeDistance, 0, 0), cubeSize, 0);
+	GameObject* start = AddAABBCubeToWorld(startPos + Vector3(0, 0, 0), cubeSize, 0);
+	GameObject* end = AddAABBCubeToWorld(startPos + Vector3((numLinks + 2) * cubeDistance, 0, 0), cubeSize, 0);
 
 	GameObject* previous = start;
 
 	for (int i = 0; i < numLinks; ++i)
 	{
-		GameObject* block = AddCubeToWorld(startPos + Vector3((i + 1) * cubeDistance, 0, 0), cubeSize, invCubeMass);
+		GameObject* block = AddOBBCubeToWorld(startPos + Vector3((i + 1) * cubeDistance, 0, 0), cubeSize, invCubeMass);
 		PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
-		OrientationConstraint* orientConstraint = new OrientationConstraint(previous, block, maxAngle);
+		SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::ROLL);
+		//OrientationConstraint* orientConstraint = new OrientationConstraint(previous, block, maxAngle);
 
 		world->AddConstraint(posConstraint);
 		world->AddConstraint(orientConstraint);
@@ -452,8 +453,8 @@ rigid body representation. This and the cube function will let you build a lot o
 physics worlds. You'll probably need another function for the creation of OBB cubes too.
 
 */
-GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius, float inverseMass) {
-	GameObject* sphere = new GameObject(2, "SPHERE");
+GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius, float inverseMass, Vector4 baseColour) {
+	GameObject* sphere = new GameObject(2, "SPHERE", States::NO_STATE, baseColour);
 
 	Vector3 sphereSize = Vector3(radius, radius, radius);
 	SphereVolume* volume = new SphereVolume(false, radius);
@@ -481,8 +482,8 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	return sphere;
 }
 
-GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass) {
-	GameObject* capsule = new GameObject(2, "CAPSULE");
+GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass, Vector4 baseColour) {
+	GameObject* capsule = new GameObject(2, "CAPSULE", States::NO_STATE, baseColour);
 
 	CapsuleVolume* volume = new CapsuleVolume(halfHeight, radius);
 	capsule->SetBoundingVolume((CollisionVolume*)volume);
@@ -503,10 +504,31 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfH
 
 }
 
-GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
-	GameObject* cube = new GameObject(2, "CUBE");
+GameObject* TutorialGame::AddAABBCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, Vector4 baseColour) {
+	GameObject* cube = new GameObject(2, "CUBE", States::NO_STATE, baseColour);
 
 	AABBVolume* volume = new AABBVolume(dimensions);
+
+	cube->SetBoundingVolume((CollisionVolume*)volume);
+
+	cube->GetTransform()
+		.SetPosition(position)
+		.SetScale(dimensions * 2);
+
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
+
+	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
+	cube->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(cube);
+
+	return cube;
+}
+GameObject* TutorialGame::AddOBBCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, Vector4 baseColour) {
+	GameObject* cube = new GameObject(2, "CUBE", States::NO_STATE, baseColour);
+
+	OBBVolume* volume = new OBBVolume(dimensions);
 
 	cube->SetBoundingVolume((CollisionVolume*)volume);
 
@@ -546,7 +568,7 @@ void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing
 
 			int randomShape = rand() % 3;
 			if (randomShape == 1) {
-				AddCubeToWorld(position, cubeDims);
+				AddAABBCubeToWorld(position, cubeDims);
 			}
 			else if (randomShape == 2) {
 				AddSphereToWorld(position, sphereRadius);
@@ -563,7 +585,7 @@ void TutorialGame::InitCubeGridWorld(int numRows, int numCols, float rowSpacing,
 	for (int x = 1; x < numCols+1; ++x) {
 		for (int z = 1; z < numRows+1; ++z) {
 			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
-			AddCubeToWorld(position, cubeDims, 1.0f);
+			AddAABBCubeToWorld(position, cubeDims, 1.0f);
 		}
 	}
 }
@@ -677,9 +699,42 @@ GameObject* TutorialGame::AddPlayerBallToWorld(const Vector3& position, const fl
 
 	return sphere;
 }
-StateGameObject* TutorialGame::AddStateSphereObjectToWorld(const Vector3& position, const float radius, float inverseMass)
+void TutorialGame::AddBallFlicker(const Vector3& position, bool onLeft)
 {
-	StateGameObject* sphere = new StateGameObject();
+	Vector3 cubeSize = Vector3(3, 10, 3);
+
+	float invCubeMass = 5; // how heavy the middle pieces are
+	float maxDistance = 0; // constraint distance
+	float maxAngle = 25; // constraint rotation
+	float cubeDistance = 0; // distance between links
+
+	Vector3 startPos = position;
+
+	GameObject* start = AddAABBCubeToWorld(startPos, cubeSize, 0);
+
+	GameObject* previous = start;
+
+	GameObject* block;
+	if (onLeft)
+	{
+		block = AddOBBCubeToWorld(startPos + Vector3(2 * cubeDistance, 0, 0), Vector3(15, 10, 2), invCubeMass, Vector4(0.5f, 1, 0.5f, 1));
+	}
+	else
+	{
+		block = AddOBBCubeToWorld(startPos + Vector3(2 * -cubeDistance, 0, 0), Vector3(15, 10, 2), invCubeMass, Vector4(0.5f, 1, 0.5f, 1));
+	}
+	block->GetRenderObject()->SetColour(Vector4(0.5f, 1, 0.5f, 1));
+	PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
+	SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::YAW);
+
+	world->AddConstraint(posConstraint);
+	world->AddConstraint(orientConstraint);
+	previous = block;
+
+}
+StateGameObject* TutorialGame::AddStateSphereObjectToWorld(ObjectMovement movement, const Vector3& position, const float radius, float inverseMass)
+{
+	StateGameObject* sphere = new StateGameObject(movement, 0, "STATE SPHERE");
 
 	SphereVolume* volume = new SphereVolume(radius);
 	sphere->SetBoundingVolume((CollisionVolume*)volume);
@@ -697,9 +752,9 @@ StateGameObject* TutorialGame::AddStateSphereObjectToWorld(const Vector3& positi
 
 	return sphere;
 }
-StateGameObject* TutorialGame::AddStateCubeObjectToWorld(const Vector3& position, const Vector3 size, float inverseMass)
+StateGameObject* TutorialGame::AddStateCubeObjectToWorld(ObjectMovement movement, const Vector3& position, const Vector3 size, float inverseMass)
 {
-	StateGameObject* cube = new StateGameObject();
+	StateGameObject* cube = new StateGameObject(movement, 0, "STATE CUBE");
 
 	AABBVolume* volume = new AABBVolume(size);
 	cube->SetBoundingVolume((CollisionVolume*)volume);
@@ -717,9 +772,9 @@ StateGameObject* TutorialGame::AddStateCubeObjectToWorld(const Vector3& position
 
 	return cube;
 }
-StateGameObject* TutorialGame::AddStateBonusObjectToWorld(const Vector3& position, float inverseMass)
+StateGameObject* TutorialGame::AddStateBonusObjectToWorld(ObjectMovement movement, const Vector3& position, float inverseMass)
 {
-	StateGameObject* bonus = new StateGameObject();
+	StateGameObject* bonus = new StateGameObject(movement, 0, "STATE BONUS");
 
 	SphereVolume* volume = new SphereVolume(0.25f);
 	bonus->SetBoundingVolume((CollisionVolume*)volume);
@@ -763,7 +818,7 @@ bool TutorialGame::SelectObject() {
 
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
 			if (selectionObject) {	//set colour to deselected;
-				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
+				selectionObject->GetRenderObject()->SetColour(selectionObject->GetBaseColour());
 				selectionObject = nullptr;
 				lockedObject	= nullptr;
 			}

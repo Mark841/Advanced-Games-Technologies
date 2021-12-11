@@ -43,20 +43,22 @@ namespace NCL {
 			GameObject* AddRightWallToWorld();
 			GameObject* AddFrontWallToWorld();
 			GameObject* AddBackWallToWorld();
-			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
-			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
+
+			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f, Vector4 baseColour = Vector4(1,1,1,1));
+			GameObject* AddAABBCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, Vector4 baseColour = Vector4(1, 1, 1, 1));
+			GameObject* AddOBBCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, Vector4 baseColour = Vector4(1, 1, 1, 1));
 			
-			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
+			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f, Vector4 baseColour = Vector4(1, 1, 1, 1));
 
 			GameObject* AddPlayerToWorld(const Vector3& position);
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
 
 			GameObject* AddPlayerBallToWorld(const Vector3& position, const float radius);
-			StateGameObject* AddStateSphereObjectToWorld(const Vector3& position, const float radius, float inverseMass);
-			StateGameObject* AddStateCubeObjectToWorld(const Vector3& position, const Vector3 size, float inverseMass);
-			StateGameObject* AddStateBonusObjectToWorld(const Vector3& position, float inverseMass);
-			StateGameObject* testStateObject;
+			void AddBallFlicker(const Vector3& position, bool onLeft);
+			StateGameObject* AddStateSphereObjectToWorld(const ObjectMovement movement, const Vector3& position, const float radius, float inverseMass);
+			StateGameObject* AddStateCubeObjectToWorld(const ObjectMovement movement, const Vector3& position, const Vector3 size, float inverseMass);
+			StateGameObject* AddStateBonusObjectToWorld(const ObjectMovement movement, const Vector3& position, float inverseMass);
 
 			GameTechRenderer*	renderer;
 			PhysicsSystem*		physics;

@@ -6,10 +6,17 @@
 using namespace NCL;
 using namespace CSC8503;
 
-StateGameObject::StateGameObject(int layer, string name) : GameObject(layer, name)
+StateGameObject::StateGameObject(ObjectMovement movement, int layer, string name) : GameObject(layer, name)
 {
-	//InitMoving();
-	InitRotating();
+	switch (movement)
+	{
+	case(ObjectMovement::MOVING): 
+		InitMoving();
+		break;
+	case(ObjectMovement::ROTATING): 
+		InitRotating();
+		break;
+	}
 }
 
 StateGameObject::~StateGameObject()
@@ -50,24 +57,52 @@ void StateGameObject::InitMoving()
 }
 void StateGameObject::InitRotating()
 {
-	
+	counter = 0.0f;
+	stateMachine = new StateMachine();
+
+	State* stateA = new State([&](float dt)->void
+		{
+			this->RotateAnticlockwise(dt);
+		});
+	State* stateB = new State([&](float dt)->void
+		{
+			this->RotateClockwise(dt);
+		});
+
+	stateMachine->AddState(stateA);
+	stateMachine->AddState(stateB);
+
+	stateMachine->AddTransition(new StateTransition(stateA, stateB, [&](void)->bool
+		{
+			return this->counter > 9.0f;
+		}));
+	stateMachine->AddTransition(new StateTransition(stateB, stateA, [&](void)->bool
+		{
+			return this->counter < 0.0f;
+		}));
 }
 
 void StateGameObject::MoveLeft(float dt)
 {
 	GetPhysicsObject()->AddForce({ -50,0,0 });
+	this->SetState(States::MOVING_LEFT);
 	counter += dt;
 }
 void StateGameObject::MoveRight(float dt)
 {
 	GetPhysicsObject()->AddForce({ 50,0,0 });
+	this->SetState(States::MOVING_RIGHT);
 	counter -= dt;
 }
-void StateGameObject::RotateLeft(float dt)
+void StateGameObject::RotateAnticlockwise(float dt)
 {
-	GetPhysicsObject()->ApplyAngularImpulse({ 0,1,0 });
+	GetPhysicsObject()->ApplyAngularImpulse({ 0,2,0 });
+	this->SetState(States::ROTATING_ANTICLOCKWISE);
+	counter += dt;
 }
-void StateGameObject::RotateRight(float dt)
+void StateGameObject::RotateClockwise(float dt)
 {
-	GetPhysicsObject()->ApplyAngularImpulse({ 0,-1,0 });
+	GetPhysicsObject()->ApplyAngularImpulse({ 0,-2,0 });
+	this->SetState(States::ROTATING_CLOCKWISE);
+	counter -= dt;
 }

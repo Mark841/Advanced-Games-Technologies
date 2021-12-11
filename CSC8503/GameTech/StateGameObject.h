@@ -1,15 +1,23 @@
 #pragma once
 #include "../CSC8503Common/GameObject.h"
 
+
 namespace NCL
 {
 	namespace CSC8503
 	{
 		class StateMachine;
+
+		enum class ObjectMovement
+		{
+			MOVING,
+			ROTATING
+		};
+
 		class StateGameObject : public GameObject
 		{
 		public:
-			StateGameObject(int layer = 0, string name = "");
+			StateGameObject(ObjectMovement movement, int layer = 0, string name = "");
 			~StateGameObject();
 
 			virtual void Update(float dt);
@@ -19,8 +27,8 @@ namespace NCL
 			void InitRotating();
 			void MoveLeft(float dt);
 			void MoveRight(float dt);
-			void RotateLeft(float dt);
-			void RotateRight(float dt);
+			void RotateAnticlockwise(float dt);
+			void RotateClockwise(float dt);
 
 			StateMachine* stateMachine;
 			float counter;

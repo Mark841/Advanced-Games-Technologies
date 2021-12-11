@@ -9,10 +9,13 @@
 
 using std::vector;
 
-enum States
+enum class States
 {
 	NO_STATE,
-	STATE
+	MOVING_LEFT,
+	MOVING_RIGHT,
+	ROTATING_CLOCKWISE,
+	ROTATING_ANTICLOCKWISE
 };
 
 namespace NCL {
@@ -20,7 +23,7 @@ namespace NCL {
 
 		class GameObject	{
 		public:
-			GameObject(int layer = 0, string name = "", States state = NO_STATE);
+			GameObject(int layer = 0, string name = "", States state = States::NO_STATE, Vector4 baseColour = Vector4(1,1,1,1));
 			~GameObject();
 
 			void SetBoundingVolume(CollisionVolume* vol) {
@@ -57,6 +60,10 @@ namespace NCL {
 				physicsObject = newObject;
 			}
 
+			Vector4 GetBaseColour() const {
+				return baseColour;
+			}
+
 			const string& GetName() const {
 				return name;
 			}
@@ -64,8 +71,11 @@ namespace NCL {
 			const string GetState() const {
 				switch (state)
 				{
-				case (NO_STATE): return "NO STATE";
-				case (STATE): return "STATE";
+				case (States::NO_STATE): return "NO STATE";
+				case (States::MOVING_LEFT): return "MOVING LEFT";
+				case (States::MOVING_RIGHT): return "MOVING RIGHT";
+				case (States::ROTATING_CLOCKWISE): return "ROTATING CLOCKWISE";
+				case (States::ROTATING_ANTICLOCKWISE): return "ROTATING ANTICLOCKWISE";
 				}
 				return "UNKNOWN STATE";
 			}
@@ -111,6 +121,7 @@ namespace NCL {
 			int layer;
 			string	name;
 			States state;
+			Vector4 baseColour;
 
 			Vector3 broadphaseAABB;
 		};
