@@ -17,7 +17,9 @@ enum class States
 	ROTATING_CLOCKWISE,
 	ROTATING_ANTICLOCKWISE,
 	SPINNING_CLOCKWISE,
-	SPINNING_ANTICLOCKWISE
+	SPINNING_ANTICLOCKWISE,
+	INACTIVE,
+	REACHED
 };
 
 namespace NCL {
@@ -36,6 +38,9 @@ namespace NCL {
 				return boundingVolume;
 			}
 
+			void SetActive(bool active) {
+				isActive = active;
+			}
 			bool IsActive() const {
 				return isActive;
 			}
@@ -95,13 +100,13 @@ namespace NCL {
 				case (States::ROTATING_ANTICLOCKWISE): return "ROTATING ANTICLOCKWISE";
 				case (States::SPINNING_CLOCKWISE): return "SPINNING CLOCKWISE";
 				case (States::SPINNING_ANTICLOCKWISE): return "SPINNING ANTICLOCKWISE";
+				case (States::INACTIVE): return "INACTIVE";
+				case (States::REACHED): return "REACHED";
 				}
 				return "UNKNOWN STATE";
 			}
 
-			virtual void OnCollisionBegin(GameObject* otherObject) {
-				//std::cout << "OnCollisionBegin event occured!\n";
-			}
+			virtual void OnCollisionBegin(GameObject* otherObject);
 
 			virtual void OnCollisionEnd(GameObject* otherObject) {
 				//std::cout << "OnCollisionEnd event occured!\n";

@@ -22,7 +22,7 @@ TutorialGame::TutorialGame(int level)	{
 	displayInfo = true;
 	inSelectionMode = false;
 	this->level = level;
-	playerCanMoveBall = false;
+	playerCanMoveBall = true;
 
 	Debug::SetRenderer(renderer);
 
@@ -79,7 +79,15 @@ void TutorialGame::UpdateGame(float dt) {
 	Debug::SetRenderer(renderer); 
 	if (level != 0)
 	{
-		totalTime += dt;
+		if (finish != nullptr && finish->GetState() == "REACHED")
+		{
+			finished = true;
+		}
+		if (!finished)
+		{
+			totalTime += dt;
+		}
+		
 		if (!inSelectionMode) {
 			world->GetMainCamera()->UpdateCamera(dt);
 		}
@@ -279,7 +287,7 @@ void TutorialGame::InitWorld1() {
 	SpinningObstacles(Vector3(-50, 0, -50));
 	AddFlickerObjects(Vector3(-150,0,0));
 	AddBallPusherZAxis(0, Vector3(-150, 5, 165));
-	AddStateBonusObjectToWorld(0, ObjectMovement::SPIN, Vector3(-150,5,0), 0.0f);
+	AddStateBonusObjectToWorld(0, ObjectMovement::SPIN, Vector3(-150,5,100), 0.0f);
 
 	RampObstacles();
 	TiltingConstraintObstacles();
@@ -287,7 +295,7 @@ void TutorialGame::InitWorld1() {
 	XAxisBridgeConstraintTest(Vector3(50, 50, -50));
 	//AddBallFlickerVertical(Vector3(-150, -5, 165), true);
 
-	AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
+	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
 
 	useGravity = true; //Toggle gravity!
 	physics->UseGravity(useGravity);
@@ -309,6 +317,11 @@ void TutorialGame::DrawTextDebugs()
 	{
 		Debug::Print("PRESS U TO UNPAUSE", Vector2(35, 50));
 	}
+	else if (finished)
+	{
+		Debug::Print("LEVEL COMPLETED", Vector2(35, 40));
+		Debug::Print("TIME TAKEN: " + std::to_string(totalTime), Vector2(30, 45));
+	}
 	else
 	{
 		if (displayInfo)
@@ -317,6 +330,7 @@ void TutorialGame::DrawTextDebugs()
 			Debug::Print("PRESS F2 TO RESET CAMERA", Vector2(5, 10));
 		}
 		Debug::Print("PRESS P TO PAUSE", Vector2(5, 90));
+		Debug::Print("TIME TAKEN: " + std::to_string(totalTime), Vector2(35, 7.5));
 
 		if (useGravity) {
 			Debug::Print("(G)ravity on", Vector2(5, 95));
@@ -552,7 +566,8 @@ GameObject* TutorialGame::AddStartToWorld(const Vector3& position, const Vector3
 GameObject* TutorialGame::AddFinishToWorld(const Vector3& position, const Vector3& size)
 {
 	Vector4 baseColour = Vector4(1, 0, 1, 1);
-	GameObject* wall = new GameObject(1, "FINISH", States::NO_STATE, baseColour);
+	StateGameObject* wall = new StateGameObject(ObjectMovement::DESTINATION, 1, "FINISH");
+	wall->SetBaseColour(baseColour);
 
 	Vector3 wallSize = size;
 	AABBVolume* volume = new AABBVolume(wallSize);
@@ -836,7 +851,7 @@ GameObject* TutorialGame::AddPlayerBallToWorld(int layer, const Vector3& positio
 		.SetScale(sphereSize)
 		.SetPosition(position);
 
-	playerBall->SetRenderObject(new RenderObject(&playerBall->GetTransform(), sphereMesh, nullptr, basicShader));
+	playerBall->SetRenderObject(new RenderObject(&playerBall->GetTransform(), sphereMesh, basicTex, basicShader));
 	playerBall->GetRenderObject()->SetColour(playerBall->GetBaseColour());
 	playerBall->SetPhysicsObject(new PhysicsObject(&playerBall->GetTransform(), playerBall->GetBoundingVolume()));
 
@@ -1035,7 +1050,7 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	if (inSelectionMode) {
-		if (!paused)
+		if (!paused && !finished)
 		{
 			renderer->DrawString("Press Q to change to camera mode!", Vector2(5, 85));
 		}
@@ -1081,7 +1096,7 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	else {
-		if (!paused)
+		if (!paused && !finished)
 		{
 			renderer->DrawString("Press Q to change to select mode!", Vector2(5, 85));
 		}
@@ -1089,7 +1104,7 @@ bool TutorialGame::SelectObject() {
 	
 
 	if (lockedObject) {
-		if (!paused)
+		if (!paused && !finished)
 		{
 			renderer->DrawString("Press L to unlock object!", Vector2(5, 75));
 		}
@@ -1131,7 +1146,7 @@ added linear motion into our physics system. After the second tutorial, objects 
 line - after the third, they'll be able to twist under torque aswell.
 */
 void TutorialGame::MoveSelectedObject() {
-	if (!paused)
+	if (!paused && !finished)
 	{
 		renderer->DrawString("Click Force: " + std::to_string(forceMagnitude), Vector2(10, 20)); // Draw debug text at 10,20
 	}

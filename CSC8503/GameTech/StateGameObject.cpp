@@ -8,6 +8,7 @@ using namespace CSC8503;
 
 StateGameObject::StateGameObject(ObjectMovement movement, int layer, string name) : GameObject(layer, name)
 {
+	counter = 0.0f;
 	switch (movement)
 	{
 	case(ObjectMovement::MOVING): 
@@ -18,6 +19,9 @@ StateGameObject::StateGameObject(ObjectMovement movement, int layer, string name
 		break;
 	case(ObjectMovement::SPIN): 
 		InitSpinning();
+		break;
+	case(ObjectMovement::DESTINATION): 
+		InitDestination();
 		break;
 	}
 }
@@ -31,83 +35,122 @@ void StateGameObject::Update(float dt)
 {
 	stateMachine->Update(dt);
 }
+void StateGameObject::OnCollisionBegin(GameObject* otherObject)
+{
+	if (otherObject->GetName() == "PLAYER BALL")
+	{
+		collisionWithPlayerBall = otherObject;
+	}
+}
 
 void StateGameObject::InitMoving()
 {
-	counter = 0.0f;
 	stateMachine = new StateMachine();
 
-	State* stateA = new State([&](float dt)->void
+	State* goLeft = new State([&](float dt)->void
 		{
 			this->MoveLeft(dt);
 		});
-	State* stateB = new State([&](float dt)->void
+	State* goRight = new State([&](float dt)->void
 		{
 			this->MoveRight(dt);
 		});
 
-	stateMachine->AddState(stateA);
-	stateMachine->AddState(stateB);
+	stateMachine->AddState(goLeft);
+	stateMachine->AddState(goRight);
 
-	stateMachine->AddTransition(new StateTransition(stateA, stateB, [&](void)->bool
+	stateMachine->AddTransition(new StateTransition(goLeft, goRight, [&](void)->bool
 		{
 			return this->counter > 3.0f;
 		}));
-	stateMachine->AddTransition(new StateTransition(stateB, stateA, [&](void)->bool
+	stateMachine->AddTransition(new StateTransition(goRight, goLeft, [&](void)->bool
 		{
 			return this->counter < 0.0f;
 		}));
 }
 void StateGameObject::InitRotating()
 {
-	counter = 0.0f;
 	stateMachine = new StateMachine();
 
-	State* stateA = new State([&](float dt)->void
+	State* antiClockwise = new State([&](float dt)->void
 		{
 			this->RotateAnticlockwise(dt);
 		});
-	State* stateB = new State([&](float dt)->void
+	State* clockwise = new State([&](float dt)->void
 		{
 			this->RotateClockwise(dt);
 		});
 
-	stateMachine->AddState(stateA);
-	stateMachine->AddState(stateB);
+	stateMachine->AddState(antiClockwise);
+	stateMachine->AddState(clockwise);
 
-	stateMachine->AddTransition(new StateTransition(stateA, stateB, [&](void)->bool
+	stateMachine->AddTransition(new StateTransition(antiClockwise, clockwise, [&](void)->bool
 		{
 			return this->counter > 5.0f;
 		}));
-	stateMachine->AddTransition(new StateTransition(stateB, stateA, [&](void)->bool
+	stateMachine->AddTransition(new StateTransition(clockwise, antiClockwise, [&](void)->bool
 		{
 			return this->counter < 0.0f;
 		}));
 }
 void StateGameObject::InitSpinning()
 {
-	counter = 0.0f;
 	stateMachine = new StateMachine();
 
-	State* stateA = new State([&](float dt)->void
+	State* antiClockwise = new State([&](float dt)->void
 		{
 			this->SpinAnticlockwise(dt);
 		});
-	State* stateB = new State([&](float dt)->void
+	State* clockwise = new State([&](float dt)->void
 		{
 			this->SpinClockwise(dt);
 		});
+	State* collected = new State([&](float dt)->void
+		{
+			collisionWithPlayerBall->GetPhysicsObject()->SetFriction(0.1f);
+			this->SetActive(false);
+		});
 
-	stateMachine->AddState(stateA);
-	stateMachine->AddState(stateB);
+	stateMachine->AddState(antiClockwise);
+	stateMachine->AddState(clockwise);
+	stateMachine->AddState(collected);
 
-	stateMachine->AddTransition(new StateTransition(stateA, stateB, [&](void)->bool
+	stateMachine->AddTransition(new StateTransition(antiClockwise, clockwise, [&](void)->bool
 		{
 			return this->counter > 10.0f;
 		}));
-	stateMachine->AddTransition(new StateTransition(stateB, stateA, [&](void)->bool
+	stateMachine->AddTransition(new StateTransition(clockwise, antiClockwise, [&](void)->bool
 		{
 			return this->counter < 0.0f;
+		}));
+	stateMachine->AddTransition(new StateTransition(antiClockwise, collected, [&](void)->bool
+		{
+			return !(collisionWithPlayerBall == nullptr);
+		}));
+	stateMachine->AddTransition(new StateTransition(clockwise, collected, [&](void)->bool
+		{
+			return !(collisionWithPlayerBall == nullptr);
+		}));
+}
+void StateGameObject::InitDestination()
+{
+	stateMachine = new StateMachine();
+
+	State* inactive = new State([&](float dt)->void
+		{
+			this->Inactive();
+		});
+	State* reached = new State([&](float dt)->void
+		{
+			this->Reached();
+		});
+
+	stateMachine->AddState(inactive);
+	stateMachine->AddState(reached);
+
+	stateMachine->AddTransition(new StateTransition(inactive, reached, [&](void)->bool
+		{
+			return !(collisionWithPlayerBall == nullptr);
 		}));
 }
 
@@ -146,4 +189,12 @@ void StateGameObject::SpinClockwise(float dt)
 	GetPhysicsObject()->SetAngularVelocity({ 0,-1,0 });
 	this->SetState(States::SPINNING_CLOCKWISE);
 	counter -= dt;
+}
+void StateGameObject::Inactive()
+{
+	this->SetState(States::INACTIVE);
+}
+void StateGameObject::Reached()
+{
+	this->SetState(States::REACHED);
 }

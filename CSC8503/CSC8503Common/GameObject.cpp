@@ -53,3 +53,11 @@ void GameObject::UpdateBroadphaseAABB() {
 		broadphaseAABB = mat * halfSizes;
 	}
 }
+
+void GameObject::OnCollisionBegin(GameObject* otherObject)
+{
+	if (this->GetName() == "FINISH" && otherObject->GetName() == "PLAYER BALL")
+	{
+
+	}
+}

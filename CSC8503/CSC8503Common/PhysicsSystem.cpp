@@ -212,7 +212,7 @@ void PhysicsSystem::BasicCollisionDetection() {
 					ImpulseResolveCollision(*info.a, *info.b, info.point);
 				}
 				else {
-					std::cout << "POWER UP COLLISION" << std::endl;
+					//std::cout << "POWER UP COLLISION" << std::endl;
 				}
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
@@ -359,7 +359,7 @@ void PhysicsSystem::NarrowPhase() {
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
 			}
 			else {
-				std::cout << "POWER UP COLLISION" << std::endl;
+				//std::cout << "POWER UP COLLISION" << std::endl;
 			}
 			info.framesLeft = numCollisionFrames;
 			allCollisions.insert(info); // insert into our main set

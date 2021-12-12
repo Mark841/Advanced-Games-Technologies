@@ -81,6 +81,7 @@ namespace NCL {
 			GameWorld*			world;
 
 			bool useGravity;
+			bool finished;
 			bool displayInfo;
 			bool playerCanMoveBall;
 			bool paused;
@@ -93,6 +94,7 @@ namespace NCL {
 			float		forceMagnitude;
 
 			GameObject* selectionObject = nullptr;
+			GameObject* finish = nullptr;
 
 			OGLMesh*	capsuleMesh = nullptr;
 			OGLMesh*	cubeMesh	= nullptr;
