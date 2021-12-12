@@ -11,7 +11,8 @@ namespace NCL
 		enum class ObjectMovement
 		{
 			MOVING,
-			ROTATING
+			ROTATING,
+			SPIN
 		};
 
 		class StateGameObject : public GameObject
@@ -25,10 +26,13 @@ namespace NCL
 		protected:
 			void InitMoving();
 			void InitRotating();
+			void InitSpinning();
 			void MoveLeft(float dt);
 			void MoveRight(float dt);
 			void RotateAnticlockwise(float dt);
 			void RotateClockwise(float dt);
+			void SpinAnticlockwise(float dt);
+			void SpinClockwise(float dt);
 
 			StateMachine* stateMachine;
 			float counter;

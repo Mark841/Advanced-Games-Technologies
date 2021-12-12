@@ -16,6 +16,9 @@ StateGameObject::StateGameObject(ObjectMovement movement, int layer, string name
 	case(ObjectMovement::ROTATING): 
 		InitRotating();
 		break;
+	case(ObjectMovement::SPIN): 
+		InitSpinning();
+		break;
 	}
 }
 
@@ -81,6 +84,32 @@ void StateGameObject::InitRotating()
 			return this->counter < 0.0f;
 		}));
 }
+void StateGameObject::InitSpinning()
+{
+	counter = 0.0f;
+	stateMachine = new StateMachine();
+
+	State* stateA = new State([&](float dt)->void
+		{
+			this->SpinAnticlockwise(dt);
+		});
+	State* stateB = new State([&](float dt)->void
+		{
+			this->SpinClockwise(dt);
+		});
+
+	stateMachine->AddState(stateA);
+	stateMachine->AddState(stateB);
+
+	stateMachine->AddTransition(new StateTransition(stateA, stateB, [&](void)->bool
+		{
+			return this->counter > 10.0f;
+		}));
+	stateMachine->AddTransition(new StateTransition(stateB, stateA, [&](void)->bool
+		{
+			return this->counter < 0.0f;
+		}));
+}
 
 void StateGameObject::MoveLeft(float dt)
 {
@@ -104,5 +133,17 @@ void StateGameObject::RotateClockwise(float dt)
 {
 	GetPhysicsObject()->SetAngularVelocity({ 0,-4,0 });
 	this->SetState(States::ROTATING_CLOCKWISE);
+	counter -= dt;
+}
+void StateGameObject::SpinAnticlockwise(float dt)
+{
+	GetPhysicsObject()->SetAngularVelocity({ 0,1,0 });
+	this->SetState(States::SPINNING_ANTICLOCKWISE);
+	counter += dt;
+}
+void StateGameObject::SpinClockwise(float dt)
+{
+	GetPhysicsObject()->SetAngularVelocity({ 0,-1,0 });
+	this->SetState(States::SPINNING_CLOCKWISE);
 	counter -= dt;
 }

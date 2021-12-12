@@ -74,7 +74,7 @@ void PhysicsSystem::Update(float dt) {
 		useBroadPhase = !useBroadPhase;
 		std::cout << "Setting broadphase to " << useBroadPhase << std::endl;
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::I)) {
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::L)) {
 		constraintIterationCount--;
 		std::cout << "Setting constraint iterations to " << constraintIterationCount << std::endl;
 	}
@@ -206,7 +206,14 @@ void PhysicsSystem::BasicCollisionDetection() {
 			CollisionDetection::CollisionInfo info;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info))
 			{
-				ImpulseResolveCollision(*info.a, *info.b, info.point);
+
+				if (!((info.a->GetName() == "PLAYER BALL" && (info.b->GetName() == "BONUS" || info.b->GetName() == "STATE BONUS")) || (info.b->GetName() == "PLAYER BALL" && (info.a->GetName() == "BONUS" || info.a->GetName() == "STATE BONUS"))))
+				{
+					ImpulseResolveCollision(*info.a, *info.b, info.point);
+				}
+				else {
+					std::cout << "POWER UP COLLISION" << std::endl;
+				}
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
 			}
@@ -346,8 +353,15 @@ void PhysicsSystem::NarrowPhase() {
 		CollisionDetection::CollisionInfo info = *i;
 		if (CollisionDetection::ObjectIntersection(info.a, info.b, info))
 		{
+
+			if (!((info.a->GetName() == "PLAYER BALL" && (info.b->GetName() == "BONUS" || info.b->GetName() == "STATE BONUS")) || (info.b->GetName() == "PLAYER BALL" && (info.a->GetName() == "BONUS" || info.a->GetName() == "STATE BONUS"))))
+			{
+				ImpulseResolveCollision(*info.a, *info.b, info.point);
+			}
+			else {
+				std::cout << "POWER UP COLLISION" << std::endl;
+			}
 			info.framesLeft = numCollisionFrames;
-			ImpulseResolveCollision(*info.a, *info.b, info.point);
 			allCollisions.insert(info); // insert into our main set
 		}
 	}

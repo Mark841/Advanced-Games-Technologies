@@ -19,8 +19,10 @@ TutorialGame::TutorialGame(int level)	{
 	forceMagnitude	= 10.0f;
 	totalTime = 0.0f;
 	useGravity		= false;
+	displayInfo = true;
 	inSelectionMode = false;
 	this->level = level;
+	playerCanMoveBall = false;
 
 	Debug::SetRenderer(renderer);
 
@@ -89,6 +91,8 @@ void TutorialGame::UpdateGame(float dt) {
 		MoveSelectedObject();
 		physics->Update(dt);
 
+
+
 		if (lockedObject != nullptr) {
 			Vector3 objPos = lockedObject->GetTransform().GetPosition();
 			Vector3 camPos = objPos + lockedOffset;
@@ -128,6 +132,9 @@ void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
 		useGravity = !useGravity; //Toggle gravity!
 		physics->UseGravity(useGravity);
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::I)) {
+		displayInfo = !displayInfo; //Toggle displaying extra text info!
 	}
 	//Running certain physics updates in a consistent order might cause some
 	//bias in the calculations - the same objects might keep 'winning' the constraint
@@ -198,7 +205,7 @@ void TutorialGame::LockedObjectMovement() {
 
 void TutorialGame::DebugObjectMovement() {
 //If we've selected an object, we can manipulate it with some key presses
-	if (inSelectionMode && selectionObject) {
+	if (inSelectionMode && selectionObject && selectionObject->GetPlayerMoveable()) {
 		//Twist the selected object!
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(-10, 0, 0));
@@ -214,10 +221,6 @@ void TutorialGame::DebugObjectMovement() {
 
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM8)) {
 			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(10, 0, 0));
 		}
 
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::UP)) {
@@ -268,18 +271,22 @@ void TutorialGame::InitWorld1() {
 	AddWallsToFloor();
 	AddWallSeperators();
 
-	ZAxisBridgeConstraintTest(Vector3(-50, 50, -150));
-	XAxisBridgeConstraintTest(Vector3(50, 50, -50));
+
+	AddStartToWorld(Vector3(-150, 0, 150), Vector3(10, 1, 10));
 
 	AddPlayerBallToWorld(2, Vector3(-150, 5, 150), 4.0f);
-	AddStartToWorld(Vector3(-150, 0, 150), Vector3(10, 1, 10));
-	RampObstacles();
-	TiltingConstraintObstacles();
 	SpinningObstacles(Vector3(-50, 0, 50));
 	SpinningObstacles(Vector3(-50, 0, -50));
 	AddFlickerObjects(Vector3(-150,0,0));
-	//AddBallFlickerVertical(Vector3(-150, -5, 165), true);
 	AddBallPusherZAxis(0, Vector3(-150, 5, 165));
+	AddStateBonusObjectToWorld(0, ObjectMovement::SPIN, Vector3(-150,5,0), 0.0f);
+
+	RampObstacles();
+	TiltingConstraintObstacles();
+	ZAxisBridgeConstraintTest(Vector3(-50, 50, -150));
+	XAxisBridgeConstraintTest(Vector3(50, 50, -50));
+	//AddBallFlickerVertical(Vector3(-150, -5, 165), true);
+
 	AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
 
 	useGravity = true; //Toggle gravity!
@@ -300,12 +307,15 @@ void TutorialGame::DrawTextDebugs()
 {
 	if (paused)
 	{
-		Debug::Print("PRESS U TO UNPAUSE", Vector2(5, 90));
+		Debug::Print("PRESS U TO UNPAUSE", Vector2(35, 50));
 	}
 	else
 	{
-		Debug::Print("PRESS F1 TO RESET GAME", Vector2(5, 5));
-		Debug::Print("PRESS F2 TO RESET CAMERA", Vector2(5, 10));
+		if (displayInfo)
+		{
+			Debug::Print("PRESS F1 TO RESET GAME", Vector2(5, 5));
+			Debug::Print("PRESS F2 TO RESET CAMERA", Vector2(5, 10));
+		}
 		Debug::Print("PRESS P TO PAUSE", Vector2(5, 90));
 
 		if (useGravity) {
@@ -382,7 +392,7 @@ void TutorialGame::ZAxisBridgeConstraintTest(const Vector3& position) {
 
 // A single function to add a large immoveable cube to the bottom of our world
 GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
-	GameObject* floor = new GameObject(1, "FLOOR");
+	GameObject* floor = new GameObject(0, "FLOOR");
 
 	Vector3 floorSize	= Vector3(200, 2, 200);
 	AABBVolume* volume	= new AABBVolume(floorSize);
@@ -816,7 +826,7 @@ GameObject* TutorialGame::AddBonusToWorld(int layer, const Vector3& position) {
 }
 
 GameObject* TutorialGame::AddPlayerBallToWorld(int layer, const Vector3& position, const float radius) {
-	GameObject* playerBall = new GameObject(layer, "PLAYER BALL", States::NO_STATE, Vector4(1, 1, 0, 1), false);
+	GameObject* playerBall = new GameObject(layer, "PLAYER BALL", States::NO_STATE, Vector4(1, 1, 0, 1), playerCanMoveBall);
 
 	Vector3 sphereSize = Vector3(radius, radius, radius);
 	SphereVolume* volume = new SphereVolume(false, radius);
@@ -984,14 +994,16 @@ StateGameObject* TutorialGame::AddStateCubeObjectToWorld(int layer, ObjectMoveme
 StateGameObject* TutorialGame::AddStateBonusObjectToWorld(int layer, ObjectMovement movement, const Vector3& position, float inverseMass)
 {
 	StateGameObject* bonus = new StateGameObject(movement, layer, "STATE BONUS");
+	bonus->SetBaseColour(pickupObjectColour);
 
-	SphereVolume* volume = new SphereVolume(0.25f);
+	SphereVolume* volume = new SphereVolume(1.0f);
 	bonus->SetBoundingVolume((CollisionVolume*)volume);
 	bonus->GetTransform()
-		.SetScale(Vector3(0.25, 0.25, 0.25))
+		.SetScale(Vector3(1.0f, 1.0f, 1.0f))
 		.SetPosition(position);
 
 	bonus->SetRenderObject(new RenderObject(&bonus->GetTransform(), bonusMesh, nullptr, basicShader));
+	bonus->GetRenderObject()->SetColour(pickupObjectColour);
 	bonus->SetPhysicsObject(new PhysicsObject(&bonus->GetTransform(), bonus->GetBoundingVolume()));
 
 	bonus->GetPhysicsObject()->SetInverseMass(inverseMass);
@@ -1023,7 +1035,10 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	if (inSelectionMode) {
-		renderer->DrawString("Press Q to change to camera mode!", Vector2(5, 85));
+		if (!paused)
+		{
+			renderer->DrawString("Press Q to change to camera mode!", Vector2(5, 85));
+		}
 
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
 			if (selectionObject) {	//set colour to deselected;
@@ -1066,23 +1081,32 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	else {
-		renderer->DrawString("Press Q to change to select mode!", Vector2(5, 85));
+		if (!paused)
+		{
+			renderer->DrawString("Press Q to change to select mode!", Vector2(5, 85));
+		}
 	}
 	
 
 	if (lockedObject) {
-		renderer->DrawString("Press L to unlock object!", Vector2(5, 75));
+		if (!paused)
+		{
+			renderer->DrawString("Press L to unlock object!", Vector2(5, 75));
+		}
 	}
 
 	else if(selectionObject){
-		renderer->DrawString("Press L to lock selected object!", Vector2(5, 75));
+		if (!paused && displayInfo)
+		{
+			renderer->DrawString("Press L to lock selected object!", Vector2(5, 75));
 
-		string text = selectionObject->GetName();
-		text += ", Centre Pos: (" + std::to_string((int)selectionObject->GetTransform().GetPosition().x) + ',' + std::to_string((int)selectionObject->GetTransform().GetPosition().y) + ',' + std::to_string((int)selectionObject->GetTransform().GetPosition().z) + ')';
-		renderer->DrawString(text, Vector2(5, 65));
-		text = "Orientation: (" + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().x) + ',' + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().y) + ',' + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().z) + ')';
-		text += ", State: " + selectionObject->GetState();
-		renderer->DrawString(text, Vector2(5, 70));
+			string text = selectionObject->GetName();
+			text += ", Centre Pos: (" + std::to_string((int)selectionObject->GetTransform().GetPosition().x) + ',' + std::to_string((int)selectionObject->GetTransform().GetPosition().y) + ',' + std::to_string((int)selectionObject->GetTransform().GetPosition().z) + ')';
+			renderer->DrawString(text, Vector2(5, 65));
+			text = "Orientation: (" + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().x) + ',' + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().y) + ',' + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().z) + ')';
+			text += ", State: " + selectionObject->GetState();
+			renderer->DrawString(text, Vector2(5, 70));
+		}
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::L)) {
@@ -1107,11 +1131,14 @@ added linear motion into our physics system. After the second tutorial, objects 
 line - after the third, they'll be able to twist under torque aswell.
 */
 void TutorialGame::MoveSelectedObject() {
-	renderer->DrawString("Click Force: " + std::to_string(forceMagnitude), Vector2(10, 20)); // Draw debug text at 10,20
+	if (!paused)
+	{
+		renderer->DrawString("Click Force: " + std::to_string(forceMagnitude), Vector2(10, 20)); // Draw debug text at 10,20
+	}
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
 
-	if (!selectionObject || selectionObject->GetName() == "PLAYER BALL" || !(selectionObject->GetPlayerMoveable()))
-		return; // we havent selected anything or it is player ball or it isn't able to be mvoed by the player
+	if (!selectionObject || !selectionObject->GetPlayerMoveable())
+		return; // we havent selected anything or it is player ball or it isn't able to be moved by the player
 
 	// Push the selected object
 	if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::RIGHT))

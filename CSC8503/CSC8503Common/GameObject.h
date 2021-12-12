@@ -15,7 +15,9 @@ enum class States
 	MOVING_LEFT,
 	MOVING_RIGHT,
 	ROTATING_CLOCKWISE,
-	ROTATING_ANTICLOCKWISE
+	ROTATING_ANTICLOCKWISE,
+	SPINNING_CLOCKWISE,
+	SPINNING_ANTICLOCKWISE
 };
 
 namespace NCL {
@@ -72,6 +74,9 @@ namespace NCL {
 				this->springDampingConstant = springDampingConstant;
 			}
 
+			void SetBaseColour(Vector4 colour) {
+				baseColour = colour;
+			}
 			Vector4 GetBaseColour() const {
 				return baseColour;
 			}
@@ -88,6 +93,8 @@ namespace NCL {
 				case (States::MOVING_RIGHT): return "MOVING RIGHT";
 				case (States::ROTATING_CLOCKWISE): return "ROTATING CLOCKWISE";
 				case (States::ROTATING_ANTICLOCKWISE): return "ROTATING ANTICLOCKWISE";
+				case (States::SPINNING_CLOCKWISE): return "SPINNING CLOCKWISE";
+				case (States::SPINNING_ANTICLOCKWISE): return "SPINNING ANTICLOCKWISE";
 				}
 				return "UNKNOWN STATE";
 			}
