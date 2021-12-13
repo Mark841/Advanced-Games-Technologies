@@ -93,7 +93,8 @@ void SingleAxisOrientationConstraint::UpdateConstraint(float dt)
 		break;
 	}
 
-	Vector3 offset = bRotation.ToEuler() - aRotation.ToEuler();
+	Vector3 offset = (bRotation.ToEuler() - aRotation.ToEuler());
+	//Vector3 offset = Vector3(angle, angle, angle) - (bRotation.ToEuler() - aRotation.ToEuler());
 
 
 	if (abs(offset.x) > 0.01f || abs(offset.y) > 0.01f || abs(offset.z) > 0.01f)
@@ -108,7 +109,7 @@ void SingleAxisOrientationConstraint::UpdateConstraint(float dt)
 
 		float constraintMass = physA->GetInverseMass() + physB->GetInverseMass();
 
-		float biasFactor = 0.01f;
+		float biasFactor = 0.5f;
 		float bias = -(biasFactor / dt) * offset.Length();
 
 		float lambda = -(velocityDot + bias) / constraintMass;
@@ -143,6 +144,7 @@ void SingleAxisOrientationConstraint::UpdateConstraint(float dt)
 //	}
 //
 //	Vector3 offset = bRotation.ToEuler() - aRotation.ToEuler();
+//	Vector3 offset = Vector3(angle, angle, angle) - (bRotation.ToEuler() - aRotation.ToEuler());
 //
 //
 //	if (abs(offset.x) > 0.01f || abs(offset.y) > 0.01f || abs(offset.z) > 0.01f)

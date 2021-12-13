@@ -3,6 +3,8 @@
 #include "GameTechRenderer.h"
 #include "../CSC8503Common/PhysicsSystem.h"
 #include "../GameTech/StateGameObject.h"
+#include "DestinationObject.h"
+#include "PowerUpObject.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -31,11 +33,12 @@ namespace NCL {
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
 			void InitDefaultFloor();
-			void InitFloorWithGap();
+			void InitLevelOneMap();
 
-			void XAxisBridgeConstraintTest(const Vector3& position);
-			void ZAxisBridgeConstraintTest(const Vector3& position);
-			void ZAxisBridgeConstraintTest(const Vector3& position, int length);
+			void XAxisBridgeConstraint(const Vector3& position);
+			void ZAxisBridgeConstraint(const Vector3& position);
+			void ZAxisBridgeConstraint(const Vector3& position, int length);
+			GameObject* AttachableRopeConstraint(const Vector3& topPosition, int length);
 	
 			bool SelectObject();
 			void MoveSelectedObject();
@@ -43,6 +46,9 @@ namespace NCL {
 			void LockedObjectMovement();
 
 			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size);
+			GameObject* AddAngledFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& angle);
+			GameObject* AddIceToWorld(const Vector3& position, const Vector3& size);
+			GameObject* AddSlimeToWorld(const Vector3& position, const Vector3& size);
 			void AddWallsToFloor();
 			GameObject* AddLeftWallToWorld();
 			GameObject* AddRightWallToWorld();
@@ -51,8 +57,8 @@ namespace NCL {
 			void AddWallSeperators();
 			GameObject* AddWallToWorld(const Vector3& position, const Vector3& size);
 			GameObject* AddStartToWorld(const Vector3& position, const Vector3& size);
-			GameObject* AddFinishToWorld(const Vector3& position, const Vector3& size);
-			GameObject* AddKillPlaneToWorld(const Vector3& position, const Vector3& size);
+			DestinationObject* AddFinishToWorld(const Vector3& position, const Vector3& size);
+			DestinationObject* AddKillPlaneToWorld(const Vector3& position, const Vector3& size);
 
 			void RampObstacles();
 			void TiltingConstraintObstacles();
@@ -78,7 +84,7 @@ namespace NCL {
 			
 			StateGameObject* AddStateSphereObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const float radius, float inverseMass);
 			StateGameObject* AddStateCubeObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const Vector3 size, float inverseMass);
-			StateGameObject* AddStateBonusObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, float inverseMass);
+			PowerUpObject* AddPowerUpObjectToWorld(int layer, string name, const Vector3& position, float inverseMass, PowerUp ability);
 
 			GameTechRenderer*	renderer;
 			PhysicsSystem*		physics;
@@ -98,8 +104,11 @@ namespace NCL {
 			float		forceMagnitude;
 
 			GameObject* selectionObject = nullptr;
-			GameObject* finish = nullptr;
-			GameObject* killPlane = nullptr;
+			GameObject* endPoint = nullptr;
+			Constraint* attachedBallConstraint = nullptr;
+			DestinationObject* finish = nullptr;
+			DestinationObject* killPlane = nullptr;
+			std::vector<PowerUpObject*> powerUps;
 			GameObject* playerBall = nullptr;
 
 			OGLMesh*	capsuleMesh = nullptr;

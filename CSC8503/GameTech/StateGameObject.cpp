@@ -11,20 +11,14 @@ StateGameObject::StateGameObject(ObjectMovement movement, int layer, string name
 	counter = 0.0f;
 	switch (movement)
 	{
-	case(ObjectMovement::MOVING): 
+	case(ObjectMovement::MOVING):
 		InitMoving();
 		break;
-	case(ObjectMovement::ROTATING): 
+	case(ObjectMovement::ROTATING):
 		InitRotating();
 		break;
-	case(ObjectMovement::SPIN): 
+	case(ObjectMovement::SPIN):
 		InitSpinning();
-		break;
-	case(ObjectMovement::DESTINATION): 
-		InitDestination();
-		break;
-	case(ObjectMovement::TELEPORTER): 
-		InitTeleporter();
 		break;
 	}
 }
@@ -122,7 +116,6 @@ void StateGameObject::InitSpinning()
 			{
 				return;
 			}
-			collisionWithPlayerBall->GetPhysicsObject()->SetFriction(0.1f);
 			this->SetActive(false);
 		});
 	State* inactive = new State([&](float dt)->void
@@ -153,52 +146,6 @@ void StateGameObject::InitSpinning()
 			return !(collisionWithPlayerBall == nullptr);
 		}));
 	stateMachine->AddTransition(new StateTransition(collected, inactive, [&](void)->bool
-		{
-			return (collisionWithPlayerBall == nullptr);
-		}));
-}
-void StateGameObject::InitDestination()
-{
-	stateMachine = new StateMachine();
-
-	State* inactive = new State([&](float dt)->void
-		{
-			this->Inactive();
-		});
-	State* reached = new State([&](float dt)->void
-		{
-			this->Reached();
-		});
-
-	stateMachine->AddState(inactive);
-	stateMachine->AddState(reached);
-
-	stateMachine->AddTransition(new StateTransition(inactive, reached, [&](void)->bool
-		{
-			return !(collisionWithPlayerBall == nullptr);
-		}));
-}
-void StateGameObject::InitTeleporter()
-{
-	stateMachine = new StateMachine();
-
-	State* inactive = new State([&](float dt)->void
-		{
-			this->Inactive();
-		});
-	State* reached = new State([&](float dt)->void
-		{
-			this->Reached();
-		});
-
-	stateMachine->AddState(inactive);
-	stateMachine->AddState(reached);
-
-	stateMachine->AddTransition(new StateTransition(inactive, reached, [&](void)->bool
-		{
-			return !(collisionWithPlayerBall == nullptr);
-		}));
-	stateMachine->AddTransition(new StateTransition(reached, inactive, [&](void)->bool
 		{
 			return (collisionWithPlayerBall == nullptr);
 		}));
@@ -243,8 +190,4 @@ void StateGameObject::SpinClockwise(float dt)
 void StateGameObject::Inactive()
 {
 	this->SetState(States::INACTIVE);
-}
-void StateGameObject::Reached()
-{
-	this->SetState(States::REACHED);
 }

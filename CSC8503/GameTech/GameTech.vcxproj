@@ -141,13 +141,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DestinationObject.cpp" />
     <ClCompile Include="GameTechRenderer.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="PowerUpObject.cpp" />
     <ClCompile Include="StateGameObject.cpp" />
     <ClCompile Include="TutorialGame.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DestinationObject.h" />
     <ClInclude Include="GameTechRenderer.h" />
+    <ClInclude Include="PowerUpObject.h" />
     <ClInclude Include="StateGameObject.h" />
     <ClInclude Include="TutorialGame.h" />
   </ItemGroup>

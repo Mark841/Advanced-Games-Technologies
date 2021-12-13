@@ -32,7 +32,7 @@ PhysicsSystem::~PhysicsSystem()	{
 }
 
 void PhysicsSystem::SetGravity(const Vector3& g) {
-	gravity = g;
+	gravity = g * 3;
 }
 
 /*
@@ -207,7 +207,7 @@ void PhysicsSystem::BasicCollisionDetection() {
 			if (CollisionDetection::ObjectIntersection(*i, *j, info))
 			{
 
-				if (!((info.a->GetName() == "PLAYER BALL" && (info.b->GetName() == "BONUS" || info.b->GetName() == "STATE BONUS")) || (info.b->GetName() == "PLAYER BALL" && (info.a->GetName() == "BONUS" || info.a->GetName() == "STATE BONUS"))))
+				if (!((info.a->GetName() == "PLAYER BALL" && (info.b->GetName() == "BONUS" || info.b->GetName() == "POWER UP")) || (info.b->GetName() == "PLAYER BALL" && (info.a->GetName() == "BONUS" || info.a->GetName() == "POWER UP"))))
 				{
 					ImpulseResolveCollision(*info.a, *info.b, info.point);
 				}
@@ -276,7 +276,7 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 
 	/////// Friction
 	float cFriction = (physA->GetFriction() + physB->GetFriction()) / 2;
-	Vector3 frictionTangent = contactVelocity - (p.normal*(Vector3::Dot(contactVelocity, p.normal)));
+	Vector3 frictionTangent = contactVelocity - (p.normal * impulseForce);
 
 	Vector3 frictionInertiaA = Vector3::Cross(physA->GetInertiaTensor() * Vector3::Cross(relativeA, frictionTangent), relativeA);
 	Vector3 frictionInertiaB = Vector3::Cross(physB->GetInertiaTensor() * Vector3::Cross(relativeB, frictionTangent), relativeB);
@@ -285,12 +285,12 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	float jt = -(Vector3::Dot(contactVelocity, frictionTangent) * cFriction) / (totalMass + frictionAngularEffect);
 	Vector3 frictionImpulse = frictionTangent * jt;
 
+	// Apply linear impulse conditionally for if objects are icy or sticky
+	physA->ApplyLinearImpulse(-frictionImpulse);
+	physB->ApplyLinearImpulse(frictionImpulse);
+
 	physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -frictionImpulse));
 	physB->ApplyAngularImpulse(Vector3::Cross(relativeB, frictionImpulse));
-
-	// Apply linear impulse conditionally for if objects are icy or sticky
-	//physA->ApplyLinearImpulse(-frictionImpulse);
-	//physB->ApplyLinearImpulse(frictionImpulse);
 }
 // TO DO
 void PhysicsSystem::ResolveSpringCollision(GameObject& a, GameObject& b, CollisionDetection::ContactPoint& p) const 
@@ -354,7 +354,7 @@ void PhysicsSystem::NarrowPhase() {
 		if (CollisionDetection::ObjectIntersection(info.a, info.b, info))
 		{
 
-			if (!((info.a->GetName() == "PLAYER BALL" && (info.b->GetName() == "BONUS" || info.b->GetName() == "STATE BONUS")) || (info.b->GetName() == "PLAYER BALL" && (info.a->GetName() == "BONUS" || info.a->GetName() == "STATE BONUS"))))
+			if (!((info.a->GetName() == "PLAYER BALL" && (info.b->GetName() == "BONUS" || info.b->GetName() == "POWER UP")) || (info.b->GetName() == "PLAYER BALL" && (info.a->GetName() == "BONUS" || info.a->GetName() == "POWER UP"))))
 			{
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
 			}

@@ -12,9 +12,7 @@ namespace NCL
 		{
 			MOVING,
 			ROTATING,
-			SPIN,
-			DESTINATION,
-			TELEPORTER
+			SPIN
 		};
 
 		class StateGameObject : public GameObject
@@ -31,8 +29,6 @@ namespace NCL
 			void InitMoving();
 			void InitRotating();
 			void InitSpinning();
-			void InitDestination();
-			void InitTeleporter();
 
 			void MoveLeft(float dt);
 			void MoveRight(float dt);
@@ -41,7 +37,6 @@ namespace NCL
 			void SpinAnticlockwise(float dt);
 			void SpinClockwise(float dt);
 			void Inactive();
-			void Reached();
 
 			GameObject* collisionWithPlayerBall;
 
