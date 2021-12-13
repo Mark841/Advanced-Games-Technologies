@@ -118,13 +118,23 @@ void StateGameObject::InitSpinning()
 		});
 	State* collected = new State([&](float dt)->void
 		{
+			if (collisionWithPlayerBall == nullptr)
+			{
+				return;
+			}
 			collisionWithPlayerBall->GetPhysicsObject()->SetFriction(0.1f);
+			this->SetActive(false);
+		});
+	State* inactive = new State([&](float dt)->void
+		{
+			this->Inactive();
 			this->SetActive(false);
 		});
 
 	stateMachine->AddState(antiClockwise);
 	stateMachine->AddState(clockwise);
 	stateMachine->AddState(collected);
+	stateMachine->AddState(inactive);
 
 	stateMachine->AddTransition(new StateTransition(antiClockwise, clockwise, [&](void)->bool
 		{
@@ -141,6 +151,10 @@ void StateGameObject::InitSpinning()
 	stateMachine->AddTransition(new StateTransition(clockwise, collected, [&](void)->bool
 		{
 			return !(collisionWithPlayerBall == nullptr);
+		}));
+	stateMachine->AddTransition(new StateTransition(collected, inactive, [&](void)->bool
+		{
+			return (collisionWithPlayerBall == nullptr);
 		}));
 }
 void StateGameObject::InitDestination()

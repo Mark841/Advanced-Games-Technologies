@@ -103,7 +103,7 @@ void TutorialGame::UpdateGame(float dt) {
 		MoveSelectedObject();
 		physics->Update(dt);
 
-
+		std::cout << playerBall->GetPhysicsObject()->GetFriction() << std::endl;
 
 		if (lockedObject != nullptr) {
 			Vector3 objPos = lockedObject->GetTransform().GetPosition();
@@ -288,17 +288,18 @@ void TutorialGame::InitWorld1() {
 
 	playerBall = AddPlayerBallToWorld(2, Vector3(-150, 5, 150), 4.0f);
 	SpinningObstacles(Vector3(-50, 0, 50));
-	//SpinningObstacles(Vector3(-50, 0, -50));
 	MovingObstacles(Vector3(-45, 0, -50));
 	AddFlickerObjects(Vector3(-150,0,0));
-	AddBallPusherZAxis(0, Vector3(-150, 5, 165));
 	AddStateBonusObjectToWorld(0, ObjectMovement::SPIN, Vector3(-150,5,100), 0.0f);
+	
+	//AddStateBonusObjectToWorld(0, ObjectMovement::SPIN, Vector3(-150,5,130), 0.0f);
 
 	RampObstacles();
 	TiltingConstraintObstacles();
 	ZAxisBridgeConstraintTest(Vector3(-50, 50, -150));
 	XAxisBridgeConstraintTest(Vector3(50, 50, -50));
-	//AddBallFlickerVertical(Vector3(-150, -5, 165), true);
+	//AddBallFlickerVertical(0, Vector3(-150, -5, 165), true);
+	AddBallPusherZAxis(0, Vector3(-150, 13, 160));
 
 	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
 
@@ -929,7 +930,7 @@ void TutorialGame::AddBallFlickerVertical(int layer, const Vector3& position, bo
 
 	float invCubeMass = 50; // how heavy the middle pieces are
 	float maxDistance = 0; // constraint distance
-	float maxAngle = 25; // constraint rotation
+	float maxAngle = 45; // constraint rotation
 	float cubeDistance = 0; // distance between links
 
 	Vector3 startPos = position;
@@ -976,11 +977,11 @@ void TutorialGame::AddBallPusherZAxis(int layer, const Vector3& position)
 	Vector3 cubeSize = Vector3(2, 2, 2);
 
 	float invCubeMass = 25; // how heavy the middle pieces are
-	float maxDistance = 10; // constraint distance
+	float maxDistance = 12; // constraint distance
 	float maxAngle = 0; // constraint rotation
 	float cubeDistance = 10; // distance between links
 
-	Vector3 startPos = (position.x < 0.0f) ? position - Vector3(maxDistance, 0, 0) : position + Vector3(maxDistance, 0, 0);
+	Vector3 startPos = (position.x < 0.0f) ? position - Vector3(cubeDistance, 0, 0) : position + Vector3(cubeDistance, 0, 0);
 
 	GameObject* start = AddAABBCubeToWorld(2, startPos, cubeSize, 0);
 	GameObject* end = AddAABBCubeToWorld(2, startPos + Vector3(2 * cubeDistance, 0, 0), cubeSize, 0);
