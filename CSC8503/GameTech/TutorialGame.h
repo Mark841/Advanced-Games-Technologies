@@ -30,16 +30,18 @@ namespace NCL {
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
 			void InitDefaultFloor();
+			void InitFloorWithGap();
 
 			void XAxisBridgeConstraintTest(const Vector3& position);
 			void ZAxisBridgeConstraintTest(const Vector3& position);
+			void ZAxisBridgeConstraintTest(const Vector3& position, int length);
 	
 			bool SelectObject();
 			void MoveSelectedObject();
 			void DebugObjectMovement();
 			void LockedObjectMovement();
 
-			GameObject* AddFloorToWorld(const Vector3& position);
+			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size);
 			void AddWallsToFloor();
 			GameObject* AddLeftWallToWorld();
 			GameObject* AddRightWallToWorld();

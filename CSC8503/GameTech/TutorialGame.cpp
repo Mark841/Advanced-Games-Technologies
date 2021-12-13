@@ -102,9 +102,7 @@ void TutorialGame::UpdateGame(float dt) {
 		SelectObject();
 		MoveSelectedObject();
 		physics->Update(dt);
-
-		std::cout << playerBall->GetPhysicsObject()->GetFriction() << std::endl;
-
+		
 		if (lockedObject != nullptr) {
 			Vector3 objPos = lockedObject->GetTransform().GetPosition();
 			Vector3 camPos = objPos + lockedOffset;
@@ -279,7 +277,7 @@ void TutorialGame::InitWorld1() {
 	world->ClearAndErase();
 	physics->Clear();
 		
-	InitDefaultFloor();
+	InitFloorWithGap();
 	AddWallsToFloor();
 	AddWallSeperators();
 	killPlane = AddKillPlaneToWorld(Vector3(0, -50, 0), Vector3(200, 2, 200));
@@ -296,8 +294,8 @@ void TutorialGame::InitWorld1() {
 
 	RampObstacles();
 	TiltingConstraintObstacles();
-	ZAxisBridgeConstraintTest(Vector3(-50, 50, -150));
-	XAxisBridgeConstraintTest(Vector3(50, 50, -50));
+	ZAxisBridgeConstraintTest(Vector3(50, -2, -100), 100);
+	//XAxisBridgeConstraintTest(Vector3(50, 50, -50));
 	//AddBallFlickerVertical(0, Vector3(-150, -5, 165), true);
 	AddBallPusherZAxis(0, Vector3(-150, 13, 160));
 
@@ -379,7 +377,7 @@ void TutorialGame::XAxisBridgeConstraintTest(const Vector3& position) {
 	world->AddConstraint(constraint);
 }
 void TutorialGame::ZAxisBridgeConstraintTest(const Vector3& position) {
-	Vector3 cubeSize = Vector3(8, 4, 5);
+	Vector3 cubeSize = Vector3(16, 2, 5);
 
 	float invCubeMass = 50; // how heavy the middle pieces are
 	int numLinks = 10;
@@ -409,12 +407,43 @@ void TutorialGame::ZAxisBridgeConstraintTest(const Vector3& position) {
 	PositionConstraint* constraint = new PositionConstraint(previous, end, maxDistance);
 	world->AddConstraint(constraint);
 }
+void TutorialGame::ZAxisBridgeConstraintTest(const Vector3& position, int length) {
+	Vector3 cubeSize = Vector3(16, 2, 5);
+
+	float invCubeMass = 50; // how heavy the middle pieces are
+	int numLinks = length / 5.5f;
+	float maxDistance = 11; // constraint distance
+	float maxAngle = 45; // constraint rotation
+	float cubeDistance = 10; // distance between links
+
+	Vector3 startPos = position;
+
+	GameObject* start = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, 0), cubeSize, 0);
+	GameObject* end = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, (numLinks + 2) * cubeDistance), cubeSize, 0);
+
+	GameObject* previous = start;
+
+	for (int i = 0; i < numLinks; ++i)
+	{
+		GameObject* block = AddOBBCubeToWorld(2, startPos + Vector3(0, 0, (i + 1) * cubeDistance), cubeSize, invCubeMass, true, moveableObjectColour);
+		block->GetRenderObject()->SetColour(moveableObjectColour);
+		PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
+		SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::ROLL);
+		//OrientationConstraint* orientConstraint = new OrientationConstraint(previous, block, maxAngle);
+
+		world->AddConstraint(posConstraint);
+		world->AddConstraint(orientConstraint);
+		previous = block;
+	}
+	PositionConstraint* constraint = new PositionConstraint(previous, end, maxDistance);
+	world->AddConstraint(constraint);
+}
 
 // A single function to add a large immoveable cube to the bottom of our world
-GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
+GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, const Vector3& size) {
 	GameObject* floor = new GameObject(0, "FLOOR");
 
-	Vector3 floorSize	= Vector3(200, 2, 200);
+	Vector3 floorSize	= size;
 	AABBVolume* volume	= new AABBVolume(floorSize);
 	floor->SetBoundingVolume((CollisionVolume*)volume);
 	floor->GetTransform()
@@ -754,7 +783,7 @@ void TutorialGame::InitSphereGridWorld(int numRows, int numCols, float rowSpacin
 			AddSphereToWorld(2, position, radius, 1.0f);
 		}
 	}
-	AddFloorToWorld(Vector3(0, -2, 0));
+	AddFloorToWorld(Vector3(0, -2, 0), Vector3(200, 2, 200));
 }
 
 void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing) {
@@ -791,7 +820,14 @@ void TutorialGame::InitCubeGridWorld(int numRows, int numCols, float rowSpacing,
 }
 
 void TutorialGame::InitDefaultFloor() {
-	AddFloorToWorld(Vector3(0, -2, 0));
+	AddFloorToWorld(Vector3(0, -2, 0), Vector3(200, 2, 200));
+}
+void TutorialGame::InitFloorWithGap() 
+{
+	AddFloorToWorld(Vector3(-100, -2, 0), Vector3(100, 2, 200));
+	AddFloorToWorld(Vector3(50, -2, 150), Vector3(50, 2, 50));
+	AddFloorToWorld(Vector3(50, -2, -150), Vector3(50, 2, 50));
+	AddFloorToWorld(Vector3(150, -2, 0), Vector3(50, 2, 200));
 }
 
 void TutorialGame::InitGameExamples() {
