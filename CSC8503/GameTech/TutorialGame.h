@@ -49,12 +49,13 @@ namespace NCL {
 			GameObject* AddWallToWorld(const Vector3& position, const Vector3& size);
 			GameObject* AddStartToWorld(const Vector3& position, const Vector3& size);
 			GameObject* AddFinishToWorld(const Vector3& position, const Vector3& size);
+			GameObject* AddKillPlaneToWorld(const Vector3& position, const Vector3& size);
 
 			void RampObstacles();
 			void TiltingConstraintObstacles();
 			void SpinningObstacles(const Vector3& centrePosition);
+			void MovingObstacles(const Vector3& centrePosition);
 			void AddFlickerObjects(const Vector3& centrePosition);
-
 
 			GameObject* AddSphereToWorld(int layer, const Vector3& position, float radius, float inverseMass = 10.0f, bool moveable = false, Vector4 baseColour = Vector4(1,1,1,1));
 			GameObject* AddAABBCubeToWorld(int layer, const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, bool moveable = false, Vector4 baseColour = Vector4(1, 1, 1, 1));
@@ -95,6 +96,8 @@ namespace NCL {
 
 			GameObject* selectionObject = nullptr;
 			GameObject* finish = nullptr;
+			GameObject* killPlane = nullptr;
+			GameObject* playerBall = nullptr;
 
 			OGLMesh*	capsuleMesh = nullptr;
 			OGLMesh*	cubeMesh	= nullptr;

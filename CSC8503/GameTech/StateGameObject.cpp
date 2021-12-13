@@ -23,6 +23,9 @@ StateGameObject::StateGameObject(ObjectMovement movement, int layer, string name
 	case(ObjectMovement::DESTINATION): 
 		InitDestination();
 		break;
+	case(ObjectMovement::TELEPORTER): 
+		InitTeleporter();
+		break;
 	}
 }
 
@@ -42,9 +45,17 @@ void StateGameObject::OnCollisionBegin(GameObject* otherObject)
 		collisionWithPlayerBall = otherObject;
 	}
 }
+void StateGameObject::OnCollisionEnd(GameObject* otherObject)
+{
+	if (otherObject->GetName() == "PLAYER BALL")
+	{
+		collisionWithPlayerBall = nullptr;
+	}
+}
 
 void StateGameObject::InitMoving()
 {
+	counter = 0.5f;
 	stateMachine = new StateMachine();
 
 	State* goLeft = new State([&](float dt)->void
@@ -61,7 +72,7 @@ void StateGameObject::InitMoving()
 
 	stateMachine->AddTransition(new StateTransition(goLeft, goRight, [&](void)->bool
 		{
-			return this->counter > 3.0f;
+			return this->counter > 1.0f;
 		}));
 	stateMachine->AddTransition(new StateTransition(goRight, goLeft, [&](void)->bool
 		{
@@ -153,28 +164,53 @@ void StateGameObject::InitDestination()
 			return !(collisionWithPlayerBall == nullptr);
 		}));
 }
+void StateGameObject::InitTeleporter()
+{
+	stateMachine = new StateMachine();
+
+	State* inactive = new State([&](float dt)->void
+		{
+			this->Inactive();
+		});
+	State* reached = new State([&](float dt)->void
+		{
+			this->Reached();
+		});
+
+	stateMachine->AddState(inactive);
+	stateMachine->AddState(reached);
+
+	stateMachine->AddTransition(new StateTransition(inactive, reached, [&](void)->bool
+		{
+			return !(collisionWithPlayerBall == nullptr);
+		}));
+	stateMachine->AddTransition(new StateTransition(reached, inactive, [&](void)->bool
+		{
+			return (collisionWithPlayerBall == nullptr);
+		}));
+}
 
 void StateGameObject::MoveLeft(float dt)
 {
-	GetPhysicsObject()->AddForce({ -50,0,0 });
+	GetPhysicsObject()->SetLinearVelocity(GetPhysicsObject()->GetLinearVelocity() + Vector3(-1, 0, 0));
 	this->SetState(States::MOVING_LEFT);
 	counter += dt;
 }
 void StateGameObject::MoveRight(float dt)
 {
-	GetPhysicsObject()->AddForce({ 50,0,0 });
+	GetPhysicsObject()->SetLinearVelocity(GetPhysicsObject()->GetLinearVelocity() + Vector3(1, 0, 0));
 	this->SetState(States::MOVING_RIGHT);
 	counter -= dt;
 }
 void StateGameObject::RotateAnticlockwise(float dt)
 {
-	GetPhysicsObject()->SetAngularVelocity({ 0,4,0 });
+	GetPhysicsObject()->SetAngularVelocity(GetPhysicsObject()->GetAngularVelocity() + Vector3(0, 0.05f, 0));
 	this->SetState(States::ROTATING_ANTICLOCKWISE);
 	counter += dt;
 }
 void StateGameObject::RotateClockwise(float dt)
 {
-	GetPhysicsObject()->SetAngularVelocity({ 0,-4,0 });
+	GetPhysicsObject()->SetAngularVelocity(GetPhysicsObject()->GetAngularVelocity() + Vector3(0, -0.05f, 0));
 	this->SetState(States::ROTATING_CLOCKWISE);
 	counter -= dt;
 }

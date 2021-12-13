@@ -83,6 +83,10 @@ void TutorialGame::UpdateGame(float dt) {
 		{
 			finished = true;
 		}
+		if (killPlane != nullptr && killPlane->GetState() == "REACHED")
+		{
+			playerBall->GetTransform().SetPosition(playerBall->GetTransform().GetPosition() + Vector3(0, abs(killPlane->GetTransform().GetPosition().y/5) + 2, 0));
+		}
 		if (!finished)
 		{
 			totalTime += dt;
@@ -278,13 +282,14 @@ void TutorialGame::InitWorld1() {
 	InitDefaultFloor();
 	AddWallsToFloor();
 	AddWallSeperators();
-
+	killPlane = AddKillPlaneToWorld(Vector3(0, -50, 0), Vector3(200, 2, 200));
 
 	AddStartToWorld(Vector3(-150, 0, 150), Vector3(10, 1, 10));
 
-	AddPlayerBallToWorld(2, Vector3(-150, 5, 150), 4.0f);
+	playerBall = AddPlayerBallToWorld(2, Vector3(-150, 5, 150), 4.0f);
 	SpinningObstacles(Vector3(-50, 0, 50));
-	SpinningObstacles(Vector3(-50, 0, -50));
+	//SpinningObstacles(Vector3(-50, 0, -50));
+	MovingObstacles(Vector3(-45, 0, -50));
 	AddFlickerObjects(Vector3(-150,0,0));
 	AddBallPusherZAxis(0, Vector3(-150, 5, 165));
 	AddStateBonusObjectToWorld(0, ObjectMovement::SPIN, Vector3(-150,5,100), 0.0f);
@@ -309,7 +314,7 @@ void TutorialGame::InitWorld2() {
 	InitDefaultFloor();
 	AddWallsToFloor();
 
-	AddPlayerBallToWorld(2, Vector3(90, 10, 90), 3.0f);
+	playerBall = AddPlayerBallToWorld(2, Vector3(90, 10, 90), 3.0f);
 }
 void TutorialGame::DrawTextDebugs()
 {
@@ -347,7 +352,7 @@ void TutorialGame::XAxisBridgeConstraintTest(const Vector3& position) {
 	float invCubeMass = 50; // how heavy the middle pieces are
 	int numLinks = 10;
 	float maxDistance = 22; // constraint distance
-	float maxAngle = 15; // constraint rotation
+	float maxAngle = 45; // constraint rotation
 	float cubeDistance = 20; // distance between links
 
 	Vector3 startPos = position;
@@ -378,7 +383,7 @@ void TutorialGame::ZAxisBridgeConstraintTest(const Vector3& position) {
 	float invCubeMass = 50; // how heavy the middle pieces are
 	int numLinks = 10;
 	float maxDistance = 11; // constraint distance
-	float maxAngle = 15; // constraint rotation
+	float maxAngle = 45; // constraint rotation
 	float cubeDistance = 10; // distance between links
 
 	Vector3 startPos = position;
@@ -586,6 +591,29 @@ GameObject* TutorialGame::AddFinishToWorld(const Vector3& position, const Vector
 	world->AddGameObject(wall);
 	return wall;
 }
+GameObject* TutorialGame::AddKillPlaneToWorld(const Vector3& position, const Vector3& size)
+{
+	Vector4 baseColour = Vector4(1, 0, 0, 1);
+	StateGameObject* killPlane = new StateGameObject(ObjectMovement::TELEPORTER, 1, "KILL PLANE");
+	killPlane->SetBaseColour(baseColour);
+
+	Vector3 planeSize = size;
+	AABBVolume* volume = new AABBVolume(planeSize);
+	killPlane->SetBoundingVolume((CollisionVolume*)volume);
+	killPlane->GetTransform()
+		.SetScale(planeSize * 2)
+		.SetPosition(position);
+
+	killPlane->SetRenderObject(new RenderObject(&killPlane->GetTransform(), cubeMesh, basicTex, basicShader));
+	killPlane->GetRenderObject()->SetColour(baseColour);
+	killPlane->SetPhysicsObject(new PhysicsObject(&killPlane->GetTransform(), killPlane->GetBoundingVolume()));
+
+	killPlane->GetPhysicsObject()->SetInverseMass(0);
+	killPlane->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(killPlane);
+	return killPlane;
+}
 
 void TutorialGame::RampObstacles()
 {
@@ -601,6 +629,13 @@ void TutorialGame::SpinningObstacles(const Vector3& centrePosition)
 	AddStateCubeObjectToWorld(0, ObjectMovement::ROTATING, centrePosition + Vector3(-10, 5, -25), Vector3(30, 10, 2), 0.0f);
 	AddStateCubeObjectToWorld(0, ObjectMovement::ROTATING, centrePosition + Vector3(10, 5, 25), Vector3(30, 10, 2), 0.0f);
 	AddStateCubeObjectToWorld(0, ObjectMovement::ROTATING, centrePosition + Vector3(-30, 5, 25), Vector3(30, 10, 2), 0.0f);
+}
+void TutorialGame::MovingObstacles(const Vector3& centrePosition)
+{
+	AddStateCubeObjectToWorld(0, ObjectMovement::MOVING, centrePosition + Vector3(30, 5, -25), Vector3(25, 10, 2), 0.0f);
+	AddStateCubeObjectToWorld(0, ObjectMovement::MOVING, centrePosition + Vector3(-10, 5, -25), Vector3(25, 10, 2), 0.0f);
+	AddStateCubeObjectToWorld(0, ObjectMovement::MOVING, centrePosition + Vector3(10, 5, 25), Vector3(25, 10, 2), 0.0f);
+	AddStateCubeObjectToWorld(0, ObjectMovement::MOVING, centrePosition + Vector3(-30, 5, 25), Vector3(25, 10, 2), 0.0f);
 }
 void TutorialGame::AddFlickerObjects(const Vector3& centrePosition)
 {

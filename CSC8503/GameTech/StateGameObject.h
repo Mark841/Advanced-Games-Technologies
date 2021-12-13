@@ -13,7 +13,8 @@ namespace NCL
 			MOVING,
 			ROTATING,
 			SPIN,
-			DESTINATION
+			DESTINATION,
+			TELEPORTER
 		};
 
 		class StateGameObject : public GameObject
@@ -24,12 +25,14 @@ namespace NCL
 
 			virtual void Update(float dt);
 			virtual void OnCollisionBegin(GameObject* otherObject);
+			virtual void OnCollisionEnd(GameObject* otherObject);
 
 		protected:
 			void InitMoving();
 			void InitRotating();
 			void InitSpinning();
 			void InitDestination();
+			void InitTeleporter();
 
 			void MoveLeft(float dt);
 			void MoveRight(float dt);
