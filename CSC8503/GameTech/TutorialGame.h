@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include "GameTechRenderer.h"
 #include "../CSC8503Common/PhysicsSystem.h"
 #include "../GameTech/StateGameObject.h"

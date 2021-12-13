@@ -85,7 +85,7 @@ void TutorialGame::UpdateGame(float dt) {
 		}
 		if (killPlane != nullptr && killPlane->GetState() == "REACHED")
 		{
-			playerBall->GetTransform().SetPosition(playerBall->GetTransform().GetPosition() + Vector3(0, abs(killPlane->GetTransform().GetPosition().y/5) + 2, 0));
+			playerBall->GetTransform().SetPosition(Vector3(playerBall->GetTransform().GetPosition().x, abs(killPlane->GetTransform().GetPosition().y/5) + 2, 150));
 		}
 		if (!finished)
 		{
