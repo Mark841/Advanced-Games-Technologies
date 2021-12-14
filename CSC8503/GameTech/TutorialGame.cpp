@@ -87,7 +87,17 @@ void TutorialGame::UpdateGame(float dt) {
 		}
 		if (killPlane != nullptr && killPlane->GetTriggered())
 		{
-			playerBall->GetTransform().SetPosition(Vector3(50, 5, 150));
+			playerBall->GetTransform().SetPosition(respawnPoint);
+		}
+		for (DestinationObject* d : checkpoints)
+		{
+			if (d != nullptr && d->GetTriggered())
+			{
+				respawnPoint = d->GetTransform().GetPosition() + Vector3(50, 15, 0);
+				d->GetPhysicsObject()->SetLinearVelocity(Vector3(0, 0, 0));
+				d->GetPhysicsObject()->SetAngularVelocity(Vector3(0, 0, 0));
+				d->GetPhysicsObject()->ClearForces();
+			}
 		}
 		for (PowerUpObject* p : powerUps)
 		{
@@ -320,18 +330,28 @@ void TutorialGame::InitWorld1() {
 	finished = false;
 	world->ClearAndErase();
 	physics->Clear();
+	checkpoints.clear();
+	powerUps.clear();
 		
 	InitLevelOneMap();
 	AddWallSeperators();
-	killPlane = AddKillPlaneToWorld(Vector3(0, -50, 0), Vector3(1000, 2, 1000));
 
-	AddStartToWorld(Vector3(-150, 0, 150), Vector3(10, 1, 10));
-
+	Vector3 startposition = Vector3(-150, 0, 150);
+	respawnPoint = startposition + Vector3(0, 15, 0);
+	AddStartToWorld(startposition, Vector3(10, 1, 10));
 	playerBall = AddPlayerBallToWorld(2, Vector3(-150, 5, 150), 4.0f);
-	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-150, 7, 100), 0.0f, PowerUp::DECREASE_TIME));
+	killPlane = AddKillPlaneToWorld(Vector3(0, -50, 0), Vector3(1000, 2, 1000));
+	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
+
+	checkpoints.emplace_back(AddCheckpointToWorld(Vector3(-100, 2, -150), Vector3(1, 1, 50)));
+	checkpoints.emplace_back(AddCheckpointToWorld(Vector3(0, 2, 150), Vector3(1, 1, 50)));
+	checkpoints.emplace_back(AddCheckpointToWorld(Vector3(100, 2, -150), Vector3(1, 1, 50)));
+
 	SpinningObstacles(Vector3(-50, 0, 50));
 	MovingObstacles(Vector3(-45, 0, -50));
 	AddFlickerObjects(Vector3(-150,0,0));
+
+	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-150, 7, 100), 0.0f, PowerUp::DECREASE_TIME));
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(125,7,-100), 0.0f, PowerUp::DECREASE_FRICTION));
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(175,7,-100), 0.0f, PowerUp::INCREASE_FRICTION));
 
@@ -339,11 +359,9 @@ void TutorialGame::InitWorld1() {
 	TiltingConstraintObstacles();
 
 	ZAxisBridgeConstraint(Vector3(50, -2, -100), 100);
-	//AddBallFlickerVertical(0, Vector3(-150, -5, 165), true);
-	//AddBallPusherZAxis(0, Vector3(-150, 13, 160));
-	AddSpringPusherZAxis(0, Vector3(-150, 5, 165), Vector3(15, 8, 2), 0.0f, 12.5f, 0.2f);
 
-	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
+	AddSpringPusherXAxis(0, Vector3(-200, 5, -150), Vector3(5, 10, 50), 0.0f, 12.5f, 0.2f);
+	AddSpringPusherZAxis(0, Vector3(-150, 5, 165), Vector3(15, 8, 2), 0.0f, 12.5f, 0.2f);
 
 	useGravity = true; //Toggle gravity!
 	physics->UseGravity(useGravity);
@@ -721,10 +739,11 @@ GameObject* TutorialGame::AddWallToWorld(const Vector3& position, const Vector3&
 	world->AddGameObject(wall);
 	return wall;
 }
-GameObject* TutorialGame::AddStartToWorld(const Vector3& position, const Vector3& size)
+DestinationObject* TutorialGame::AddStartToWorld(const Vector3& position, const Vector3& size)
 {
 	Vector4 baseColour = Vector4(1, 0, 1, 1);
-	GameObject* wall = new GameObject(1, "START", States::NO_STATE, baseColour);
+	DestinationObject* wall = new DestinationObject(0, "START");
+	wall->SetBaseColour(baseColour);
 
 	Vector3 wallSize = size;
 	AABBVolume* volume = new AABBVolume(wallSize);
@@ -746,7 +765,7 @@ GameObject* TutorialGame::AddStartToWorld(const Vector3& position, const Vector3
 DestinationObject* TutorialGame::AddFinishToWorld(const Vector3& position, const Vector3& size)
 {
 	Vector4 baseColour = Vector4(1, 0, 1, 1);
-	DestinationObject* wall = new DestinationObject(1, "FINISH");
+	DestinationObject* wall = new DestinationObject(0, "FINISH");
 	wall->SetBaseColour(baseColour);
 
 	Vector3 wallSize = size;
@@ -758,6 +777,28 @@ DestinationObject* TutorialGame::AddFinishToWorld(const Vector3& position, const
 
 	wall->SetRenderObject(new RenderObject(&wall->GetTransform(), cubeMesh, basicTex, basicShader));
 	wall->GetRenderObject()->SetColour(baseColour);
+	wall->SetPhysicsObject(new PhysicsObject(&wall->GetTransform(), wall->GetBoundingVolume()));
+
+	wall->GetPhysicsObject()->SetInverseMass(0);
+	wall->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(wall);
+	return wall;
+}
+DestinationObject* TutorialGame::AddCheckpointToWorld(const Vector3& position, const Vector3& size)
+{
+	DestinationObject* wall = new DestinationObject(0, "CHECKPOINT");
+	wall->SetBaseColour(checkpointColour);
+
+	Vector3 wallSize = size;
+	AABBVolume* volume = new AABBVolume(wallSize);
+	wall->SetBoundingVolume((CollisionVolume*)volume);
+	wall->GetTransform()
+		.SetScale(wallSize * 2)
+		.SetPosition(position);
+
+	wall->SetRenderObject(new RenderObject(&wall->GetTransform(), cubeMesh, basicTex, basicShader));
+	wall->GetRenderObject()->SetColour(checkpointColour);
 	wall->SetPhysicsObject(new PhysicsObject(&wall->GetTransform(), wall->GetBoundingVolume()));
 
 	wall->GetPhysicsObject()->SetInverseMass(0);
@@ -1185,6 +1226,19 @@ void TutorialGame::AddBallPusherZAxis(int layer, const Vector3& position)
 	world->AddConstraint(constraint);
 }
 
+void TutorialGame::AddSpringPusherXAxis(int layer, const Vector3& origin, const Vector3& size, float length, float snappiness, float damping)
+{
+	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 0.0f, true, moveableObjectColour, "SPRING BLOCK");
+	block->GetRenderObject()->SetColour(moveableObjectColour);
+	block->GetPhysicsObject()->SetAppliesGravity(false);
+
+	Spring* spring = new Spring(length, snappiness, damping);
+	SpringConstraint* springConstraint = new SpringConstraint(block, origin, spring, Axis::PITCH);
+	FacingConstraint* faceConstraint = new FacingConstraint(block, origin);
+
+	world->AddConstraint(springConstraint);
+	world->AddConstraint(faceConstraint);
+}
 void TutorialGame::AddSpringPusherZAxis(int layer, const Vector3& origin, const Vector3& size, float length, float snappiness, float damping)
 {
 	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 0.0f, true, moveableObjectColour, "SPRING BLOCK");
@@ -1219,21 +1273,21 @@ StateGameObject* TutorialGame::AddStateSphereObjectToWorld(int layer, ObjectMove
 
 	return sphere;
 }
-StateGameObject* TutorialGame::AddStateCubeObjectToWorld(int layer, ObjectMovement movement, const Vector3& position, const Vector3 size, float inverseMass)
+StateGameObject* TutorialGame::AddStateCubeObjectToWorld(int layer, ObjectMovement movement, const Vector3& position, const Vector3& size, float inverseMass)
 {
 	StateGameObject* cube = new StateGameObject(movement, layer, "STATE CUBE");
 
-	OBBVolume* volume = new OBBVolume(size);
+	OBBVolume* volume = new OBBVolume(size/2);
 	cube->SetBoundingVolume((CollisionVolume*)volume);
 	cube->GetTransform()
-		.SetScale(Vector3(size))
-		.SetPosition(position);
+		.SetPosition(position)
+		.SetScale(size);
 
 	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
 	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
 
 	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
-	cube->GetPhysicsObject()->InitSphereInertia(false);
+	cube->GetPhysicsObject()->InitCubeInertia();
 
 	world->AddGameObject(cube);
 
@@ -1283,7 +1337,7 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	if (inSelectionMode) {
-		if (!paused && !finished)
+		if (!paused)
 		{
 			renderer->DrawString("Press Q to change to camera mode!", Vector2(5, 85));
 		}
@@ -1329,7 +1383,7 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	else {
-		if (!paused && !finished)
+		if (!paused)
 		{
 			renderer->DrawString("Press Q to change to select mode!", Vector2(5, 85));
 		}

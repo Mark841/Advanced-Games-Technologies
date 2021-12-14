@@ -56,8 +56,9 @@ namespace NCL {
 			GameObject* AddBackWallToWorld();
 			void AddWallSeperators();
 			GameObject* AddWallToWorld(const Vector3& position, const Vector3& size);
-			GameObject* AddStartToWorld(const Vector3& position, const Vector3& size);
+			DestinationObject* AddStartToWorld(const Vector3& position, const Vector3& size);
 			DestinationObject* AddFinishToWorld(const Vector3& position, const Vector3& size);
+			DestinationObject* AddCheckpointToWorld(const Vector3& position, const Vector3& size);
 			DestinationObject* AddKillPlaneToWorld(const Vector3& position, const Vector3& size);
 
 			void RampObstacles();
@@ -85,7 +86,7 @@ namespace NCL {
 			void AddSpringPusherZAxis(int layer, const Vector3& position, const Vector3& size, float length, float snappiness, float damping);
 			
 			StateGameObject* AddStateSphereObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const float radius, float inverseMass);
-			StateGameObject* AddStateCubeObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const Vector3 size, float inverseMass);
+			StateGameObject* AddStateCubeObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const Vector3& size, float inverseMass);
 			PowerUpObject* AddPowerUpObjectToWorld(int layer, string name, const Vector3& position, float inverseMass, PowerUp ability);
 
 			GameTechRenderer*	renderer;
@@ -100,8 +101,10 @@ namespace NCL {
 			bool inSelectionMode;
 			int level;
 			float totalTime;
+			Vector3 respawnPoint;
 			Vector4 moveableObjectColour = Vector4(0.5f, 1, 0.5f, 1);
 			Vector4 pickupObjectColour = Vector4(0.5f, 1, 1, 1);
+			Vector4 checkpointColour = Vector4(1, 0.5f, 0.5f, 1);
 
 			float		forceMagnitude;
 
@@ -111,6 +114,7 @@ namespace NCL {
 			DestinationObject* finish = nullptr;
 			DestinationObject* killPlane = nullptr;
 			std::vector<PowerUpObject*> powerUps;
+			std::vector<DestinationObject*> checkpoints;
 			GameObject* playerBall = nullptr;
 
 			OGLMesh*	capsuleMesh = nullptr;

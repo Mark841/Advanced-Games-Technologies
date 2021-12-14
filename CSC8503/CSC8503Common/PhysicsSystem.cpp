@@ -206,8 +206,10 @@ void PhysicsSystem::BasicCollisionDetection() {
 			CollisionDetection::CollisionInfo info;
 			if (CollisionDetection::ObjectIntersection(*i, *j, info))
 			{
-
-				if (!((info.a->GetName() == "PLAYER BALL" && (info.b->GetName() == "BONUS" || info.b->GetName() == "POWER UP")) || (info.b->GetName() == "PLAYER BALL" && (info.a->GetName() == "BONUS" || info.a->GetName() == "POWER UP"))))
+				if (!((info.a->GetName() == "PLAYER BALL" && (info.b->GetName() == "BONUS" || info.b->GetName() == "POWER UP")) 
+					|| (info.b->GetName() == "PLAYER BALL" && (info.a->GetName() == "BONUS" || info.a->GetName() == "POWER UP"))
+					|| (info.a->GetName() == "PLAYER BALL" && info.b->GetName() == "CHECKPOINT")
+					|| (info.b->GetName() == "PLAYER BALL" && info.a->GetName() == "CHECKPOINT")))
 				{
 					ImpulseResolveCollision(*info.a, *info.b, info.point);
 				}
@@ -354,7 +356,10 @@ void PhysicsSystem::NarrowPhase() {
 		if (CollisionDetection::ObjectIntersection(info.a, info.b, info))
 		{
 
-			if (!((info.a->GetName() == "PLAYER BALL" && (info.b->GetName() == "BONUS" || info.b->GetName() == "POWER UP")) || (info.b->GetName() == "PLAYER BALL" && (info.a->GetName() == "BONUS" || info.a->GetName() == "POWER UP"))))
+			if (!((info.a->GetName() == "PLAYER BALL" && (info.b->GetName() == "BONUS" || info.b->GetName() == "POWER UP"))
+				|| (info.b->GetName() == "PLAYER BALL" && (info.a->GetName() == "BONUS" || info.a->GetName() == "POWER UP"))
+				|| (info.a->GetName() == "PLAYER BALL" && info.b->GetName() == "CHECKPOINT")
+				|| (info.b->GetName() == "PLAYER BALL" && info.a->GetName() == "CHECKPOINT"))) 
 			{
 				ImpulseResolveCollision(*info.a, *info.b, info.point);
 			}
