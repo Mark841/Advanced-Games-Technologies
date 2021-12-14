@@ -126,6 +126,12 @@
     <ClInclude Include="SingleAxisOrientationConstraint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SpringConstraint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Spring.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameWorld.cpp">
@@ -180,6 +186,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SingleAxisOrientationConstraint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SpringConstraint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Spring.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

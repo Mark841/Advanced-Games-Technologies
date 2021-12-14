@@ -1,6 +1,8 @@
 #include "TutorialGame.h"
+#include "../CSC8503Common/Spring.h"
 #include "../CSC8503Common/GameWorld.h"
 #include "../CSC8503Common/PositionConstraint.h"
+#include "../CSC8503Common/SpringConstraint.h"
 #include "../CSC8503Common/OrientationConstraint.h"
 #include "../CSC8503Common/SingleAxisOrientationConstraint.h"
 #include "../../Plugins/OpenGLRendering/OGLMesh.h"
@@ -95,6 +97,7 @@ void TutorialGame::UpdateGame(float dt) {
 				{
 					playerBall->GetPhysicsObject()->SetFriction(0.99f);
 					world->RemoveGameObject(p);
+
 				}
 				if (p->GetAbility() == PowerUp::DECREASE_FRICTION)
 				{
@@ -113,6 +116,7 @@ void TutorialGame::UpdateGame(float dt) {
 					totalTime -= 1.2f;
 					world->RemoveGameObject(p);
 				}
+				powerUps.erase(std::remove(powerUps.begin(), powerUps.end(), p), powerUps.end());
 			}
 		}
 		if (!finished)
@@ -170,6 +174,10 @@ void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
 		useGravity = !useGravity; //Toggle gravity!
 		physics->UseGravity(useGravity);
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F)) {
+		playerCanMoveBall = !playerCanMoveBall; 
+		playerBall->SetObjectControllable(playerCanMoveBall);
 	}
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::E)) {
 		if (attachedBallConstraint != nullptr)
@@ -332,7 +340,8 @@ void TutorialGame::InitWorld1() {
 
 	ZAxisBridgeConstraint(Vector3(50, -2, -100), 100);
 	//AddBallFlickerVertical(0, Vector3(-150, -5, 165), true);
-	AddBallPusherZAxis(0, Vector3(-150, 13, 160));
+	//AddBallPusherZAxis(0, Vector3(-150, 13, 160));
+	AddSpringPusherZAxis(0, Vector3(-150, 50, 150), Vector3(15, 8, 2), 0.1f, 5.0f);
 
 	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
 
@@ -395,8 +404,8 @@ void TutorialGame::XAxisBridgeConstraint(const Vector3& position) {
 
 	Vector3 startPos = position;
 
-	GameObject* start = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, 0), cubeSize, 0);
-	GameObject* end = AddAABBCubeToWorld(2, startPos + Vector3((numLinks + 2) * cubeDistance, 0, 0), cubeSize, 0);
+	GameObject* start = AddAABBCubeToWorld(0, startPos + Vector3(0, 0, 0), cubeSize, 0);
+	GameObject* end = AddAABBCubeToWorld(0, startPos + Vector3((numLinks + 2) * cubeDistance, 0, 0), cubeSize, 0);
 
 	GameObject* previous = start;
 
@@ -426,8 +435,8 @@ void TutorialGame::ZAxisBridgeConstraint(const Vector3& position) {
 
 	Vector3 startPos = position;
 
-	GameObject* start = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, 0), cubeSize, 0);
-	GameObject* end = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, (numLinks + 2) * cubeDistance), cubeSize, 0);
+	GameObject* start = AddAABBCubeToWorld(0, startPos + Vector3(0, 0, 0), cubeSize, 0);
+	GameObject* end = AddAABBCubeToWorld(0, startPos + Vector3(0, 0, (numLinks + 2) * cubeDistance), cubeSize, 0);
 
 	GameObject* previous = start;
 
@@ -457,8 +466,8 @@ void TutorialGame::ZAxisBridgeConstraint(const Vector3& position, int length) {
 
 	Vector3 startPos = position;
 
-	GameObject* start = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, 0), cubeSize, 0);
-	GameObject* end = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, (numLinks + 2) * cubeDistance), cubeSize, 0);
+	GameObject* start = AddAABBCubeToWorld(0, startPos + Vector3(0, 0, 0), cubeSize, 0);
+	GameObject* end = AddAABBCubeToWorld(0, startPos + Vector3(0, 0, (numLinks + 2) * cubeDistance), cubeSize, 0);
 
 	GameObject* previous = start;
 
@@ -488,7 +497,7 @@ GameObject* TutorialGame::AttachableRopeConstraint(const Vector3& topPosition, i
 
 	Vector3 startPos = topPosition;
 
-	GameObject* start = AddAABBCubeToWorld(2, startPos + Vector3(0, 0, 0), cubeSize, 0);
+	GameObject* start = AddAABBCubeToWorld(0, startPos + Vector3(0, 0, 0), cubeSize, 0);
 
 	GameObject* previous = start;
 
@@ -1085,7 +1094,7 @@ void TutorialGame::AddBallFlickerHorizontal(int layer, const Vector3& position, 
 
 	Vector3 startPos = position;
 
-	GameObject* start = AddAABBCubeToWorld(layer, startPos, cubeSize, 0);
+	GameObject* start = AddAABBCubeToWorld(0, startPos, cubeSize, 0);
 
 	GameObject* previous = start;
 
@@ -1109,7 +1118,7 @@ void TutorialGame::AddBallFlickerVertical(int layer, const Vector3& position, bo
 
 	Vector3 startPos = position;
 
-	GameObject* start = AddAABBCubeToWorld(layer, startPos, cubeSize, 0);
+	GameObject* start = AddAABBCubeToWorld(0, startPos, cubeSize, 0);
 
 	GameObject* previous = start;
 
@@ -1134,7 +1143,7 @@ void TutorialGame::AddBallPusherXAxis(int layer, const Vector3& position)
 
 	Vector3 startPos = position;
 
-	GameObject* start = AddAABBCubeToWorld(layer, startPos, cubeSize, 0);
+	GameObject* start = AddAABBCubeToWorld(0, startPos, cubeSize, 0);
 
 	GameObject* previous = start;
 
@@ -1157,12 +1166,12 @@ void TutorialGame::AddBallPusherZAxis(int layer, const Vector3& position)
 
 	Vector3 startPos = (position.x < 0.0f) ? position - Vector3(cubeDistance, 0, 0) : position + Vector3(cubeDistance, 0, 0);
 
-	GameObject* start = AddAABBCubeToWorld(2, startPos, cubeSize, 0);
-	GameObject* end = AddAABBCubeToWorld(2, startPos + Vector3(2 * cubeDistance, 0, 0), cubeSize, 0);
+	GameObject* start = AddAABBCubeToWorld(0, startPos, cubeSize, 0);
+	GameObject* end = AddAABBCubeToWorld(0, startPos + Vector3(2 * cubeDistance, 0, 0), cubeSize, 0);
 
 	GameObject* previous = start;
 
-	GameObject* block = AddOBBCubeToWorld(2, startPos + Vector3(cubeDistance, 0, 10), Vector3(4, 4, 4), invCubeMass, true, moveableObjectColour);
+	GameObject* block = AddOBBCubeToWorld(layer, startPos + Vector3(cubeDistance, 0, 10), Vector3(4, 4, 4), invCubeMass, true, moveableObjectColour);
 	block->GetRenderObject()->SetColour(moveableObjectColour);
 	PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
 	SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::ROLL);
@@ -1174,6 +1183,18 @@ void TutorialGame::AddBallPusherZAxis(int layer, const Vector3& position)
 	
 	PositionConstraint* constraint = new PositionConstraint(previous, end, maxDistance);
 	world->AddConstraint(constraint);
+}
+
+void TutorialGame::AddSpringPusherZAxis(int layer, const Vector3& origin, const Vector3& size, float length, float snappiness)
+{
+	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 1.0f, true, moveableObjectColour);
+	block->GetRenderObject()->SetColour(moveableObjectColour);
+	block->GetPhysicsObject()->SetAppliesGravity(false);
+
+	Spring* spring = new Spring(length, snappiness);
+	SpringConstraint* springConstraint = new SpringConstraint(block, Vector3(-150, 40, 150), spring);
+
+	world->AddConstraint(springConstraint);
 }
 
 StateGameObject* TutorialGame::AddStateSphereObjectToWorld(int layer, ObjectMovement movement, const Vector3& position, const float radius, float inverseMass)

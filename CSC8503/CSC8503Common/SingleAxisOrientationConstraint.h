@@ -7,14 +7,7 @@ namespace NCL
 	namespace CSC8503
 	{
 		class GameObject;
-
-		enum class Axis
-		{
-			PITCH,
-			YAW,
-			ROLL
-		};
-
+		
 		class SingleAxisOrientationConstraint : public Constraint
 		{
 		public:

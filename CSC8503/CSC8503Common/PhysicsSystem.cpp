@@ -393,7 +393,7 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 		Vector3 force = object->GetForce();
 		Vector3 accel = force * inverseMass;
 
-		if (applyGravity && inverseMass > 0)
+		if (applyGravity && object->GetAppliesGravity() && inverseMass > 0)
 			accel += gravity; // dont move infinitely heavy things
 
 		linearVel += accel * dt; // integrate accel

@@ -24,6 +24,13 @@ enum class States
 namespace NCL {
 	namespace CSC8503 {
 
+		enum class Axis
+		{
+			PITCH,
+			YAW,
+			ROLL
+		};
+
 		class GameObject	{
 		public:
 			GameObject(int layer = 0, string name = "", States state = States::NO_STATE, Vector4 baseColour = Vector4(1,1,1,1), bool moveable = false, GameObject* attachSpring = nullptr);
@@ -78,6 +85,9 @@ namespace NCL {
 				this->springDampingConstant = springDampingConstant;
 			}
 
+			void SetObjectControllable(bool moveable) {
+				this->playerMoveable = moveable;
+			}
 			void SetBaseColour(Vector4 colour) {
 				baseColour = colour;
 			}

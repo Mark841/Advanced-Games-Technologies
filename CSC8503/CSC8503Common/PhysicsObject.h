@@ -12,7 +12,7 @@ namespace NCL {
 
 		class PhysicsObject	{
 		public:
-			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume);
+			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume, bool applyGravity = true);
 			~PhysicsObject();
 
 			Vector3 GetLinearVelocity() const {
@@ -37,6 +37,14 @@ namespace NCL {
 
 			float GetInverseMass() const {
 				return inverseMass;
+			}
+			void SetAppliesGravity(bool toggle) 
+			{
+				applyGravity = toggle;
+			}
+			bool GetAppliesGravity() const
+			{
+				return applyGravity;
 			}
 
 			void ApplyAngularImpulse(const Vector3& force);
@@ -92,6 +100,7 @@ namespace NCL {
 			float inverseMass;
 			float elasticity;
 			float friction;
+			bool applyGravity;
 
 			//linear stuff
 			Vector3 linearVelocity;
