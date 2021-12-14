@@ -194,6 +194,7 @@ void TutorialGame::UpdateKeys() {
 		{
 			world->RemoveConstraint(attachedBallConstraint, true);
 			attachedBallConstraint = nullptr;
+			powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(50, 5, -100), 0.0f, PowerUp::ATTACH));
 		}
 	}
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::I)) {
@@ -351,7 +352,9 @@ void TutorialGame::InitWorld1() {
 	MovingObstacles(Vector3(-45, 0, -50));
 	AddFlickerObjects(Vector3(-150,0,0));
 
-	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-150, 7, 100), 0.0f, PowerUp::DECREASE_TIME));
+	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-150, 7, -100), 0.0f, PowerUp::DECREASE_TIME));
+	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-50, 7, 50), 0.0f, PowerUp::DECREASE_TIME));
+	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(50, 5, 0), 0.0f, PowerUp::DECREASE_TIME));
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(125,7,-100), 0.0f, PowerUp::DECREASE_FRICTION));
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(175,7,-100), 0.0f, PowerUp::INCREASE_FRICTION));
 
@@ -371,15 +374,20 @@ void TutorialGame::InitWorld2() {
 	finished = false;
 	world->ClearAndErase();
 	physics->Clear();
+	checkpoints.clear();
+	powerUps.clear();
 
 	InitSphereGridWorld(1,5,5,5,5);
 	InitDefaultFloor();
 	//AddAngledFloorToWorld(Vector3(0, -2, 0), Vector3(200, 2, 200), Vector3(45,0,0));
-	endPoint = AttachableRopeConstraint(Vector3(50, 65, -100), 25);
+	endPoint = AttachableRopeConstraint(Vector3(50, 60, -100), 25);
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(50, 5, -100), 0.0f, PowerUp::ATTACH));
 	AddWallsToFloor();
 
 	playerBall = AddPlayerBallToWorld(2, Vector3(90, 10, 90), 3.0f);
+
+	useGravity = true; //Toggle gravity!
+	physics->UseGravity(useGravity);
 }
 void TutorialGame::DrawTextDebugs()
 {
