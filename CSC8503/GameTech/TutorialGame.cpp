@@ -341,7 +341,7 @@ void TutorialGame::InitWorld1() {
 	ZAxisBridgeConstraint(Vector3(50, -2, -100), 100);
 	//AddBallFlickerVertical(0, Vector3(-150, -5, 165), true);
 	//AddBallPusherZAxis(0, Vector3(-150, 13, 160));
-	AddSpringPusherZAxis(0, Vector3(-150, 5, 165), Vector3(15, 8, 2), 5.0f, 12.5f, 0.2f);
+	AddSpringPusherZAxis(0, Vector3(-150, 5, 165), Vector3(15, 8, 2), 0.0f, 12.5f, 0.2f);
 
 	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
 
@@ -878,8 +878,8 @@ GameObject* TutorialGame::AddCapsuleToWorld(int layer, const Vector3& position, 
 	return capsule;
 
 }
-GameObject* TutorialGame::AddAABBCubeToWorld(int layer, const Vector3& position, Vector3 dimensions, float inverseMass, bool moveable, Vector4 baseColour) {
-	GameObject* cube = new GameObject(layer, "CUBE", States::NO_STATE, baseColour, moveable);
+GameObject* TutorialGame::AddAABBCubeToWorld(int layer, const Vector3& position, Vector3 dimensions, float inverseMass, bool moveable, Vector4 baseColour, string name) {
+	GameObject* cube = new GameObject(layer, name, States::NO_STATE, baseColour, moveable);
 
 	AABBVolume* volume = new AABBVolume(dimensions);
 
@@ -899,8 +899,8 @@ GameObject* TutorialGame::AddAABBCubeToWorld(int layer, const Vector3& position,
 
 	return cube;
 }
-GameObject* TutorialGame::AddOBBCubeToWorld(int layer, const Vector3& position, Vector3 dimensions, float inverseMass, bool moveable, Vector4 baseColour) {
-	GameObject* cube = new GameObject(layer, "CUBE", States::NO_STATE, baseColour, moveable);
+GameObject* TutorialGame::AddOBBCubeToWorld(int layer, const Vector3& position, Vector3 dimensions, float inverseMass, bool moveable, Vector4 baseColour, string name) {
+	GameObject* cube = new GameObject(layer, name, States::NO_STATE, baseColour, moveable);
 
 	OBBVolume* volume = new OBBVolume(dimensions);
 
@@ -1187,12 +1187,12 @@ void TutorialGame::AddBallPusherZAxis(int layer, const Vector3& position)
 
 void TutorialGame::AddSpringPusherZAxis(int layer, const Vector3& origin, const Vector3& size, float length, float snappiness, float damping)
 {
-	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 15.0f, true, moveableObjectColour);
+	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 0.0f, true, moveableObjectColour, "SPRING BLOCK");
 	block->GetRenderObject()->SetColour(moveableObjectColour);
 	block->GetPhysicsObject()->SetAppliesGravity(false);
 
 	Spring* spring = new Spring(length, snappiness, damping);
-	SpringConstraint* springConstraint = new SpringConstraint(block, origin, spring);
+	SpringConstraint* springConstraint = new SpringConstraint(block, origin, spring, Axis::ROLL);
 	FacingConstraint* faceConstraint = new FacingConstraint(block, origin);
 
 	world->AddConstraint(springConstraint);
@@ -1383,7 +1383,7 @@ void TutorialGame::MoveSelectedObject() {
 	{
 		renderer->DrawString("Click Force: " + std::to_string(forceMagnitude), Vector2(10, 20)); // Draw debug text at 10,20
 	}
-	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
+	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 10.0f;
 
 	if (!selectionObject || !selectionObject->GetPlayerMoveable())
 		return; // we havent selected anything or it is player ball or it isn't able to be moved by the player
@@ -1396,20 +1396,23 @@ void TutorialGame::MoveSelectedObject() {
 		if (world->Raycast(ray, closestCollision, true))
 		{
 			if (closestCollision.node == selectionObject)
-				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
+			{
+				if (selectionObject->GetName() == "SPRING BLOCK")
+				{
+					if (abs(ray.GetDirection().x) > abs(ray.GetDirection().z))
+					{
+						selectionObject->GetPhysicsObject()->SetLinearVelocity(Vector3(forceMagnitude, 0, 0));
+					}
+					else
+					{
+						selectionObject->GetPhysicsObject()->SetLinearVelocity(Vector3(0, 0, forceMagnitude));
+					}
+				}
+				else
+				{
+					selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
+				}
+			}
 		}
 	}
-
-	/*if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::UP)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -1) * forceMagnitude/5);
-	}
-	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::LEFT)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(-1, 0, 0) * forceMagnitude/5);
-	}
-	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::DOWN)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 1) * forceMagnitude/5);
-	}
-	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::RIGHT)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(1, 0, 0) * forceMagnitude/5);
-	}*/
 }

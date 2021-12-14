@@ -28,7 +28,8 @@ namespace NCL {
 		{
 			PITCH,
 			YAW,
-			ROLL
+			ROLL,
+			ALL
 		};
 
 		class GameObject	{

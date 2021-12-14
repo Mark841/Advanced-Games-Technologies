@@ -14,11 +14,12 @@ namespace NCL
 		{
 		public:
 
-			SpringConstraint(GameObject* a, Vector3 origin, Spring* s)
+			SpringConstraint(GameObject* a, Vector3 origin, Spring* s, Axis axis = Axis::ALL)
 			{
 				object = a;
 				this->origin = origin;
 				this->spring = s;
+				this->axis = axis;
 			}
 			~SpringConstraint() {}
 
@@ -28,6 +29,7 @@ namespace NCL
 			GameObject* object;
 			Vector3 origin;
 			Spring* spring;
+			Axis axis;
 		};
 	}
 }

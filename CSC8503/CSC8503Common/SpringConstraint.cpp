@@ -7,7 +7,7 @@ void SpringConstraint::UpdateConstraint(float dt)
 {
 	Vector3 relativePos = object->GetTransform().GetPosition() - origin;
 	Vector3 pos = object->GetTransform().GetPosition();
-
+	
 	float length = relativePos.Length() - spring->GetLength();
 
 	if (abs(length) > 0.01f)
@@ -17,6 +17,19 @@ void SpringConstraint::UpdateConstraint(float dt)
 
 		Vector3 force = offsetDir * -(spring->GetSnappiness() * (length - spring->GetLength()));
 
-		object->GetPhysicsObject()->ApplyLinearImpulse(force * dt);
+		if (axis == Axis::PITCH)
+		{
+			force = Vector3(force.x, 0, 0);
+		}
+		if (axis == Axis::YAW)
+		{
+			force = Vector3(0, force.y, 0);
+		}
+		if (axis == Axis::ROLL)
+		{
+			force = Vector3(0, 0, force.z);
+		}
+
+		object->GetPhysicsObject()->SetLinearVelocity(object->GetPhysicsObject()->GetLinearVelocity() + (force * dt));
 	}
 }
