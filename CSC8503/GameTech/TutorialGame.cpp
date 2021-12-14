@@ -2,6 +2,7 @@
 #include "../CSC8503Common/Spring.h"
 #include "../CSC8503Common/GameWorld.h"
 #include "../CSC8503Common/PositionConstraint.h"
+#include "../CSC8503Common/LockingPositionConstraint.h"
 #include "../CSC8503Common/SpringConstraint.h"
 #include "../CSC8503Common/FacingConstraint.h"
 #include "../CSC8503Common/OrientationConstraint.h"
@@ -371,9 +372,11 @@ void TutorialGame::InitWorld2() {
 	checkpoints.clear();
 	powerUps.clear();
 
+	world->GetMainCamera()->SetPosition(Vector3(-300, 325, 300));
+
 	InitLevelTwoMap();
 
-	playerBall = AddPlayerBallToWorld(2, Vector3(-175, 5, 175), 3.0f);
+	playerBall = AddPlayerBallToWorld(2, Vector3(-175, 280, 175), 3.0f);
 
 	endPoint = AttachableRopeConstraint(Vector3(-175, 65, 0), 25);
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-175, 5, 0), 0.0f, PowerUp::ATTACH));
@@ -750,6 +753,48 @@ void TutorialGame::AddMazeWalls()
 	AddWallToWorld(Vector3(0, 5, 125), Vector3(1, 10, 25));
 	AddWallToWorld(Vector3(50, 5, 150), Vector3(1, 10, 50));
 }
+void TutorialGame::AddFunnel(const Vector3& holeCentre, int heightAboveFloor)
+{
+	AddAngledFloorToWorld(Vector3(holeCentre.x, heightAboveFloor, holeCentre.z - 15), Vector3(20, 2, 40), Vector3(80, 0, 0));
+	AddAngledFloorToWorld(Vector3(holeCentre.x, heightAboveFloor, holeCentre.z + 15), Vector3(20, 2, 40), Vector3(-80, 0, 0));
+	AddAngledFloorToWorld(Vector3(holeCentre.x + 15, heightAboveFloor, holeCentre.z), Vector3(40, 2, 20), Vector3(0, 0, 80));
+	AddAngledFloorToWorld(Vector3(holeCentre.x - 15, heightAboveFloor, holeCentre.z), Vector3(40, 2, 20), Vector3(0, 0, -80));
+}
+void TutorialGame::AddFunnelFloor(const Vector3& holeCentre, int heightAboveFloor)
+{
+	AddAngledFloorToWorld(Vector3(holeCentre.x, heightAboveFloor + 45, holeCentre.z - 60), Vector3(80, 2, 40), Vector3(10, 0, 0));
+	AddAngledFloorToWorld(Vector3(holeCentre.x, heightAboveFloor + 45, holeCentre.z + 60), Vector3(80, 2, 40), Vector3(-10, 0, 0));
+	AddAngledFloorToWorld(Vector3(holeCentre.x + 60, heightAboveFloor + 45, holeCentre.z), Vector3(40, 2, 80), Vector3(0, 0, 10));
+	AddAngledFloorToWorld(Vector3(holeCentre.x - 60, heightAboveFloor + 45, holeCentre.z), Vector3(40, 2, 80), Vector3(0, 0, -10));
+}
+void TutorialGame::AddFunnelFloorWithObstacles(const Vector3& holeCentre, int heightAboveFloor)
+{
+	AddFunnelFloor(holeCentre, heightAboveFloor);
+	AddCapsuleToWorld(0, holeCentre + Vector3(45, heightAboveFloor + 45, 0), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-45, heightAboveFloor + 45, 0), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(0, heightAboveFloor + 45, 45), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(0, heightAboveFloor + 45, -45), 8.0f, 4.0f, 0.0f);
+
+	GameObject* capsule = AddCapsuleToWorld(0, holeCentre + Vector3(35, heightAboveFloor + 45, 35), 8.0f, 4.0f, 0.0f);
+	capsule->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(170, 45, 0));
+	AddCapsuleToWorld(0, holeCentre + Vector3(-35, heightAboveFloor + 45, 35), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(35, heightAboveFloor + 45, -35), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-35, heightAboveFloor + 45, -35), 8.0f, 4.0f, 0.0f);
+
+	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 53, 70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 53, 70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 53, -70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 53, -70), 8.0f, 4.0f, 0.0f);
+
+	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 50, 35), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 50, 35), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 50, -35), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 50, -35), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(35, heightAboveFloor + 50, 70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-35, heightAboveFloor + 50, 70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(35, heightAboveFloor + 50, -70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-35, heightAboveFloor + 50, -70), 8.0f, 4.0f, 0.0f);
+}
 
 void TutorialGame::AddWallSeperators()
 {
@@ -1071,7 +1116,14 @@ void TutorialGame::InitLevelTwoMap()
 	AddMazeFloor();
 	AddWallsToFloor();
 	AddMazeWalls();
-	AddAngledFloorToWorld(Vector3(0, 100, 0), Vector3(50, 2, 50), Vector3(45, 0, 0));
+	AddFunnel(Vector3(-175, 0, 175), 200);
+	AddFunnelFloorWithObstacles(Vector3(-175, 0, 175), 200);
+
+	GameObject* floor = AddOBBCubeToWorld(0, Vector3(-175, 275, 175), Vector3(60, 1, 60), 5.0f, true, moveableObjectColour, "PIVOTABLE CUBE");
+	floor->GetPhysicsObject()->SetAppliesGravity(false);
+	floor->GetRenderObject()->SetColour(moveableObjectColour);
+	LockingPositionConstraint* fixPosition = new LockingPositionConstraint(floor, Vector3(-175, 275, 175));
+	world->AddConstraint(fixPosition);
 
 	Vector3 startposition = Vector3(-175, 0, 175);
 	respawnPoint = startposition + Vector3(0, 15, 0);

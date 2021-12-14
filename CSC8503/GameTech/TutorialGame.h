@@ -61,6 +61,10 @@ namespace NCL {
 			void AddMazeFloor();
 			void AddMazeWalls();
 
+			void AddFunnel(const Vector3& holeCentre, int heightAboveFloor);
+			void AddFunnelFloor(const Vector3& holeCentre, int heightAboveFloor);
+			void AddFunnelFloorWithObstacles(const Vector3& holeCentre, int heightAboveFloor);
+
 			void AddWallSeperators();
 			GameObject* AddWallToWorld(const Vector3& position, const Vector3& size);
 			DestinationObject* AddStartToWorld(const Vector3& position, const Vector3& size);
