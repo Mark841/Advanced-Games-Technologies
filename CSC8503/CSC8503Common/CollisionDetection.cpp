@@ -572,9 +572,7 @@ bool CollisionDetection::OBBCapsuleIntersection(const CapsuleVolume& volumeA, co
 	return false;
 }
 // Sphere / Capsule
-// TO DO
-// Get orientation of capsule, then apply invTransform only to the sphere location and for capsule just on y axis add and subtract half height for the capsule to make it straight. 
-// Then find point on that y axis line where sphere and sphere could collide
+// TO FIX
 bool CollisionDetection::SphereCapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
 	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) 
 {
@@ -587,12 +585,12 @@ bool CollisionDetection::SphereCapsuleIntersection(const CapsuleVolume& volumeA,
 	Vector3 bottomCentre = capsulePosition - (capsuleOrientation * Vector3(0, 1, 0) * (volumeA.GetHalfHeight() - volumeA.GetRadius()));
 	
 	Vector3 capsuleLine = topCentre - bottomCentre;
-	SphereVolume* sphereVolume = new SphereVolume(false, volumeA.GetRadius());
 	Transform sphereTransform = worldTransformA;
 	Vector3 slope = capsuleLine.Normalised();	
 	sphereTransform.SetPosition((slope * (Vector3::Dot(slope, worldTransformB.GetPosition() - topCentre))) + topCentre);
+	SphereVolume sphereVol(false, volumeA.GetRadius());
 
-	bool collided = SphereIntersection(sphereVolume, sphereTransform, volumeB, worldTransformB, collisionInfo);
+	bool collided = SphereIntersection(sphereVol, sphereTransform, volumeB, worldTransformB, collisionInfo);
 	if (collided)
 	{
 		collisionInfo.point.localA = transform * collisionInfo.point.localA;

@@ -94,10 +94,7 @@ void TutorialGame::UpdateGame(float dt) {
 		{
 			if (d != nullptr && d->GetTriggered())
 			{
-				respawnPoint = d->GetTransform().GetPosition() + Vector3(50, 15, 0);
-				d->GetPhysicsObject()->SetLinearVelocity(Vector3(0, 0, 0));
-				d->GetPhysicsObject()->SetAngularVelocity(Vector3(0, 0, 0));
-				d->GetPhysicsObject()->ClearForces();
+				respawnPoint = d->GetTransform().GetPosition() + Vector3(25, 15, 0);
 			}
 		}
 		for (PowerUpObject* p : powerUps)
@@ -195,7 +192,7 @@ void TutorialGame::UpdateKeys() {
 		{
 			world->RemoveConstraint(attachedBallConstraint, true);
 			attachedBallConstraint = nullptr;
-			powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(50, 5, -100), 0.0f, PowerUp::ATTACH));
+			powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-175, 5, 0), 0.0f, PowerUp::ATTACH));
 		}
 	}
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::I)) {
@@ -273,11 +270,13 @@ void TutorialGame::DebugObjectMovement() {
 	if (inSelectionMode && selectionObject && selectionObject->GetPlayerMoveable()) {
 		//Twist the selected object!
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(-10, 0, 0));
+			//selectionObject->GetPhysicsObject()->AddTorque(Vector3(-10, 0, 0));
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(-10, 0, 0));
 		}
 
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(10, 0, 0));
+			//selectionObject->GetPhysicsObject()->AddTorque(Vector3(10, 0, 0));
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(10, 0, 0));
 		}
 
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM7)) {
@@ -375,8 +374,11 @@ void TutorialGame::InitWorld2() {
 	world->GetMainCamera()->SetPosition(Vector3(-300, 325, 300));
 
 	InitLevelTwoMap();
+	checkpoints.emplace_back(AddCheckpointToWorld(Vector3(-150, 2, 25), Vector3(1, 1, 25)));
 
 	playerBall = AddPlayerBallToWorld(2, Vector3(-175, 280, 175), 3.0f);
+	playerCanMoveBall = true;
+	playerBall->SetObjectControllable(playerCanMoveBall);
 
 	endPoint = AttachableRopeConstraint(Vector3(-175, 65, 0), 25);
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-175, 5, 0), 0.0f, PowerUp::ATTACH));
@@ -770,30 +772,33 @@ void TutorialGame::AddFunnelFloor(const Vector3& holeCentre, int heightAboveFloo
 void TutorialGame::AddFunnelFloorWithObstacles(const Vector3& holeCentre, int heightAboveFloor)
 {
 	AddFunnelFloor(holeCentre, heightAboveFloor);
-	AddCapsuleToWorld(0, holeCentre + Vector3(45, heightAboveFloor + 45, 0), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(-45, heightAboveFloor + 45, 0), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(0, heightAboveFloor + 45, 45), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(0, heightAboveFloor + 45, -45), 8.0f, 4.0f, 0.0f);
+	// Capsules around centre
+	AddCapsuleToWorld(0, holeCentre + Vector3(45, heightAboveFloor + 45, -2.5f), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-45, heightAboveFloor + 45, 2.5f), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(2.5f, heightAboveFloor + 45, 45), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-2.5f, heightAboveFloor + 45, -45), 8.0f, 4.0f, 0.0f);
 
-	GameObject* capsule = AddCapsuleToWorld(0, holeCentre + Vector3(35, heightAboveFloor + 45, 35), 8.0f, 4.0f, 0.0f);
+	// Centre corner capsules
+	GameObject* capsule = AddCapsuleToWorld(0, holeCentre + Vector3(37.5f, heightAboveFloor + 45, 35), 8.0f, 4.0f, 0.0f);
 	capsule->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(170, 45, 0));
-	AddCapsuleToWorld(0, holeCentre + Vector3(-35, heightAboveFloor + 45, 35), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(35, heightAboveFloor + 45, -35), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(-35, heightAboveFloor + 45, -35), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-35, heightAboveFloor + 45, 37.5f), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(35, heightAboveFloor + 45, -37.5f), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-37.5f, heightAboveFloor + 45, -35), 8.0f, 4.0f, 0.0f);
 
-	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 53, 70), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 53, 70), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 53, -70), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 53, -70), 8.0f, 4.0f, 0.0f);
+	// Further out corner capsules
+	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 53, 72.5f), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-72.5f, heightAboveFloor + 53, 70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(72.5f, heightAboveFloor + 53, -70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 53, -72.5f), 8.0f, 4.0f, 0.0f);
 
-	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 50, 35), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 50, 35), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 50, -35), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 50, -35), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(35, heightAboveFloor + 50, 70), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(-35, heightAboveFloor + 50, 70), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(35, heightAboveFloor + 50, -70), 8.0f, 4.0f, 0.0f);
-	AddCapsuleToWorld(0, holeCentre + Vector3(-35, heightAboveFloor + 50, -70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 50, 22.5f), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 50, 22.5f), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(70, heightAboveFloor + 50, -22.5f), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-70, heightAboveFloor + 50, -22.5f), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(22.5f, heightAboveFloor + 50, 70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-22.5f, heightAboveFloor + 50, 70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(22.5f, heightAboveFloor + 50, -70), 8.0f, 4.0f, 0.0f);
+	AddCapsuleToWorld(0, holeCentre + Vector3(-22.5f, heightAboveFloor + 50, -70), 8.0f, 4.0f, 0.0f);
 }
 
 void TutorialGame::AddWallSeperators()
@@ -924,6 +929,7 @@ void TutorialGame::TiltingConstraintObstacles()
 {
 
 }
+
 void TutorialGame::SpinningObstacles(const Vector3& centrePosition)
 {
 	AddStateCubeObjectToWorld(0, ObjectMovement::ROTATING, centrePosition + Vector3(30, 5, -25), Vector3(30, 10, 2), 0.0f);
@@ -1125,11 +1131,11 @@ void TutorialGame::InitLevelTwoMap()
 	LockingPositionConstraint* fixPosition = new LockingPositionConstraint(floor, Vector3(-175, 275, 175));
 	world->AddConstraint(fixPosition);
 
-	Vector3 startposition = Vector3(-175, 0, 175);
+	Vector3 startposition = Vector3(-175, -0.5f, 175);
 	respawnPoint = startposition + Vector3(0, 15, 0);
-	AddStartToWorld(startposition, Vector3(10, 1, 10));
+	AddStartToWorld(startposition, Vector3(25, 1, 25));
 	killPlane = AddKillPlaneToWorld(Vector3(0, -50, 0), Vector3(1000, 2, 1000));
-	finish = AddFinishToWorld(Vector3(0, 0, 0), Vector3(10, 1, 10));
+	finish = AddFinishToWorld(Vector3(0, -0.5f, 0), Vector3(25, 1, 25));
 }
 
 void TutorialGame::InitGameExamples() {
