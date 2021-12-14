@@ -345,7 +345,7 @@ void TutorialGame::InitWorld1() {
 	//AddSpringPusherZAxis(0, Vector3(-150, 50, 150), Vector3(15, 8, 2), 5.0f, 12.5f, 0.2f);
 
 
-	GameObject* block = AddOBBCubeToWorld(0, Vector3(-125, 50, 125), Vector3(15, 8, 2), 1.0f, true, moveableObjectColour);
+	GameObject* block = AddOBBCubeToWorld(0, Vector3(-125, 75, 125), Vector3(15, 8, 2), 1.0f, true, moveableObjectColour);
 	block->GetRenderObject()->SetColour(moveableObjectColour);
 	block->GetPhysicsObject()->SetAppliesGravity(false);
 	GameObject* sphere = AddSphereToWorld(0, Vector3(-150, 50, 150), 2.5f, 0.0f);;
