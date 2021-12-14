@@ -33,7 +33,9 @@ namespace NCL {
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
 			void InitDefaultFloor();
+
 			void InitLevelOneMap();
+			void InitLevelTwoMap();
 
 			void XAxisBridgeConstraint(const Vector3& position);
 			void ZAxisBridgeConstraint(const Vector3& position);
@@ -49,11 +51,16 @@ namespace NCL {
 			GameObject* AddAngledFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& angle);
 			GameObject* AddIceToWorld(const Vector3& position, const Vector3& size);
 			GameObject* AddSlimeToWorld(const Vector3& position, const Vector3& size);
+
 			void AddWallsToFloor();
 			GameObject* AddLeftWallToWorld();
 			GameObject* AddRightWallToWorld();
 			GameObject* AddFrontWallToWorld();
 			GameObject* AddBackWallToWorld();
+
+			void AddMazeFloor();
+			void AddMazeWalls();
+
 			void AddWallSeperators();
 			GameObject* AddWallToWorld(const Vector3& position, const Vector3& size);
 			DestinationObject* AddStartToWorld(const Vector3& position, const Vector3& size);

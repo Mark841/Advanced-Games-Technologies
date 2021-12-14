@@ -335,14 +335,8 @@ void TutorialGame::InitWorld1() {
 	powerUps.clear();
 		
 	InitLevelOneMap();
-	AddWallSeperators();
 
-	Vector3 startposition = Vector3(-150, 0, 150);
-	respawnPoint = startposition + Vector3(0, 15, 0);
-	AddStartToWorld(startposition, Vector3(10, 1, 10));
 	playerBall = AddPlayerBallToWorld(2, Vector3(-150, 5, 150), 4.0f);
-	killPlane = AddKillPlaneToWorld(Vector3(0, -50, 0), Vector3(1000, 2, 1000));
-	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
 
 	checkpoints.emplace_back(AddCheckpointToWorld(Vector3(-100, 2, -150), Vector3(1, 1, 50)));
 	checkpoints.emplace_back(AddCheckpointToWorld(Vector3(0, 2, 150), Vector3(1, 1, 50)));
@@ -377,14 +371,13 @@ void TutorialGame::InitWorld2() {
 	checkpoints.clear();
 	powerUps.clear();
 
-	InitSphereGridWorld(1,5,5,5,5);
-	InitDefaultFloor();
-	//AddAngledFloorToWorld(Vector3(0, -2, 0), Vector3(200, 2, 200), Vector3(45,0,0));
-	endPoint = AttachableRopeConstraint(Vector3(50, 60, -100), 25);
-	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(50, 5, -100), 0.0f, PowerUp::ATTACH));
-	AddWallsToFloor();
+	InitLevelTwoMap();
 
-	playerBall = AddPlayerBallToWorld(2, Vector3(90, 10, 90), 3.0f);
+	playerBall = AddPlayerBallToWorld(2, Vector3(-175, 5, 175), 3.0f);
+
+	endPoint = AttachableRopeConstraint(Vector3(-175, 65, 0), 25);
+	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-175, 5, 0), 0.0f, PowerUp::ATTACH));
+
 
 	useGravity = true; //Toggle gravity!
 	physics->UseGravity(useGravity);
@@ -721,6 +714,43 @@ GameObject* TutorialGame::AddBackWallToWorld()
 
 	return wallBack;
 }
+
+void TutorialGame::AddMazeFloor()
+{
+	AddFloorToWorld(Vector3(25, -2, 0), Vector3(175, 2, 200));
+	AddFloorToWorld(Vector3(-175, -2, -150), Vector3(25, 2, 50));
+	AddFloorToWorld(Vector3(-175, -2, 100), Vector3(25, 2, 100));
+}
+void TutorialGame::AddMazeWalls()
+{
+	AddWallToWorld(Vector3(-175, 5, -150), Vector3(25, 10, 1));
+	AddWallToWorld(Vector3(-100, 5, -150), Vector3(1, 10, 50));
+	AddWallToWorld(Vector3(-50, 5, -175), Vector3(1, 10, 25));
+	AddWallToWorld(Vector3(0, 5, -125), Vector3(1, 10, 25));
+	AddWallToWorld(Vector3(75, 5, -150), Vector3(25, 10, 1));
+	AddWallToWorld(Vector3(100, 5, -125), Vector3(1, 10, 25));
+	AddWallToWorld(Vector3(-25, 5, -100), Vector3(25, 10, 1));
+	AddWallToWorld(Vector3(125, 5, -100), Vector3(25, 10, 1));
+	AddWallToWorld(Vector3(-150, 5, -50), Vector3(1, 10, 50));
+	AddWallToWorld(Vector3(-100, 5, -50), Vector3(50, 10, 1));
+	AddWallToWorld(Vector3(-50, 5, -25), Vector3(1, 10, 75));
+	AddWallToWorld(Vector3(50, 5, -50), Vector3(50, 10, 1));
+	AddWallToWorld(Vector3(50, 5, -50), Vector3(1, 10, 50));
+	AddWallToWorld(Vector3(175, 5, -50), Vector3(25, 10, 1));
+	AddWallToWorld(Vector3(-150, 5, 50), Vector3(50, 10, 1));
+	AddWallToWorld(Vector3(-100, 5, 50), Vector3(1, 10, 50));
+	AddWallToWorld(Vector3(50, 5, 50), Vector3(100, 10, 1));
+	AddWallToWorld(Vector3(125, 5, 0), Vector3(25, 10, 1));
+	AddWallToWorld(Vector3(100, 5, 75), Vector3(1, 10, 75));
+	AddWallToWorld(Vector3(175, 5, 100), Vector3(25, 10, 1));
+	AddWallToWorld(Vector3(-25, 5, 100), Vector3(25, 10, 1));
+	AddWallToWorld(Vector3(-150, 5, 150), Vector3(1, 10, 50));
+	AddWallToWorld(Vector3(-100, 5, 175), Vector3(1, 10, 25));
+	AddWallToWorld(Vector3(-50, 5, 150), Vector3(1, 10, 50));
+	AddWallToWorld(Vector3(0, 5, 125), Vector3(1, 10, 25));
+	AddWallToWorld(Vector3(50, 5, 150), Vector3(1, 10, 50));
+}
+
 void TutorialGame::AddWallSeperators()
 {
 	AddWallToWorld(Vector3(-100, 5, 50), Vector3(2, 10, 150));
@@ -839,10 +869,12 @@ DestinationObject* TutorialGame::AddKillPlaneToWorld(const Vector3& position, co
 	return killPlane;
 }
 
+// TO DO
 void TutorialGame::RampObstacles()
 {
 
 }
+// TO DO
 void TutorialGame::TiltingConstraintObstacles() 
 {
 
@@ -1026,6 +1058,26 @@ void TutorialGame::InitLevelOneMap()
 	AddSlimeToWorld(Vector3(175, -2, 0), Vector3(25, 2, 100));
 	AddFloorToWorld(Vector3(150, -2, 150), Vector3(50, 2, 50));
 	AddWallsToFloor();
+	AddWallSeperators();
+
+	Vector3 startposition = Vector3(-150, 0, 150);
+	respawnPoint = startposition + Vector3(0, 15, 0);
+	AddStartToWorld(startposition, Vector3(10, 1, 10));
+	killPlane = AddKillPlaneToWorld(Vector3(0, -50, 0), Vector3(1000, 2, 1000));
+	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
+}
+void TutorialGame::InitLevelTwoMap()
+{
+	AddMazeFloor();
+	AddWallsToFloor();
+	AddMazeWalls();
+	AddAngledFloorToWorld(Vector3(0, 100, 0), Vector3(50, 2, 50), Vector3(45, 0, 0));
+
+	Vector3 startposition = Vector3(-175, 0, 175);
+	respawnPoint = startposition + Vector3(0, 15, 0);
+	AddStartToWorld(startposition, Vector3(10, 1, 10));
+	killPlane = AddKillPlaneToWorld(Vector3(0, -50, 0), Vector3(1000, 2, 1000));
+	finish = AddFinishToWorld(Vector3(0, 0, 0), Vector3(10, 1, 10));
 }
 
 void TutorialGame::InitGameExamples() {
