@@ -9,11 +9,32 @@ void FacingConstraint::UpdateConstraint(float dt)
 {
 	Vector3 pos = object->GetTransform().GetPosition();
 	Vector3 relativePos = origin - pos;
+	Vector3 orient = pos - origin;
 
-	
-	float xAngle = atan((pos.y - origin.y) / (pos.z - origin.z)) * 180 / PI;
-	float yAngle = atan((pos.x - origin.x) / (pos.z - origin.z)) * 180 / PI;
-	//float zAngle = atan((pos.z - origin.z) / (pos.x - origin.x)) * 180 / PI;
+	if (orient.z != 0)
+	{
+		if (orient.y != 0)
+		{
+			xAngle = atan(orient.y / orient.z) * 180 / PI;
+		}
+		else
+		{
+			xAngle = 0;
+		}
+		if (orient.x != 0)
+		{
+			yAngle = atan(orient.x / orient.z) * 180 / PI;
+		}
+		else
+		{
+			yAngle = 0;
+		}
+	}
+	else
+	{
+		xAngle = 0;
+		yAngle = 0;
+	}
 
 	Vector3 o = object->GetTransform().GetOrientation().ToEuler();
 

@@ -25,6 +25,9 @@ namespace NCL
 		protected:
 			GameObject* object;
 			Vector3 origin;
+
+			float xAngle;
+			float yAngle;
 		};
 	}
 }

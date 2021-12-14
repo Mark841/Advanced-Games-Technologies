@@ -25,13 +25,12 @@ TutorialGame::TutorialGame(int level)	{
 	displayInfo = true;
 	inSelectionMode = false;
 	this->level = level;
-	playerCanMoveBall = true;
+	playerCanMoveBall = false;
 
 	Debug::SetRenderer(renderer);
 
 	InitialiseAssets();
 }
-
 
 /*
 
@@ -342,20 +341,7 @@ void TutorialGame::InitWorld1() {
 	ZAxisBridgeConstraint(Vector3(50, -2, -100), 100);
 	//AddBallFlickerVertical(0, Vector3(-150, -5, 165), true);
 	//AddBallPusherZAxis(0, Vector3(-150, 13, 160));
-	//AddSpringPusherZAxis(0, Vector3(-150, 50, 150), Vector3(15, 8, 2), 5.0f, 12.5f, 0.2f);
-
-
-	GameObject* block = AddOBBCubeToWorld(0, Vector3(-125, 75, 125), Vector3(15, 8, 2), 1.0f, true, moveableObjectColour);
-	block->GetRenderObject()->SetColour(moveableObjectColour);
-	block->GetPhysicsObject()->SetAppliesGravity(false);
-	GameObject* sphere = AddSphereToWorld(0, Vector3(-150, 50, 150), 2.5f, 0.0f);;
-	sphere->GetRenderObject()->SetColour(moveableObjectColour);
-	sphere->GetPhysicsObject()->SetAppliesGravity(false);
-	FacingConstraint* faceConstraint = new FacingConstraint(block, Vector3(-150, 50, 150));
-	world->AddConstraint(faceConstraint);
-
-
-
+	AddSpringPusherZAxis(0, Vector3(-150, 5, 165), Vector3(15, 8, 2), 5.0f, 12.5f, 0.2f);
 
 	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
 

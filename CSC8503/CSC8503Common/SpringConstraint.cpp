@@ -8,13 +8,15 @@ void SpringConstraint::UpdateConstraint(float dt)
 	Vector3 relativePos = object->GetTransform().GetPosition() - origin;
 	Vector3 pos = object->GetTransform().GetPosition();
 
-	float offset = relativePos.Length() - spring->GetLength();
-	if (abs(offset) > 0.01f)
+	float length = relativePos.Length() - spring->GetLength();
+
+	if (abs(length) > 0.01f)
 	{
 		Vector3 offsetDir = relativePos.Normalised();
+		float offset = relativePos.Length();
 
-		Vector3 force = (offsetDir * -(spring->GetSnappiness())) * spring->GetDamping();
+		Vector3 force = offsetDir * -(spring->GetSnappiness() * (length - spring->GetLength()));
 
-		object->GetPhysicsObject()->ApplyLinearImpulse(force);
+		object->GetPhysicsObject()->ApplyLinearImpulse(force * dt);
 	}
 }
