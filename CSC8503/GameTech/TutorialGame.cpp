@@ -3,6 +3,7 @@
 #include "../CSC8503Common/GameWorld.h"
 #include "../CSC8503Common/PositionConstraint.h"
 #include "../CSC8503Common/SpringConstraint.h"
+#include "../CSC8503Common/FacingConstraint.h"
 #include "../CSC8503Common/OrientationConstraint.h"
 #include "../CSC8503Common/SingleAxisOrientationConstraint.h"
 #include "../../Plugins/OpenGLRendering/OGLMesh.h"
@@ -341,7 +342,20 @@ void TutorialGame::InitWorld1() {
 	ZAxisBridgeConstraint(Vector3(50, -2, -100), 100);
 	//AddBallFlickerVertical(0, Vector3(-150, -5, 165), true);
 	//AddBallPusherZAxis(0, Vector3(-150, 13, 160));
-	AddSpringPusherZAxis(0, Vector3(-150, 50, 150), Vector3(15, 8, 2), 0.1f, 5.0f);
+	//AddSpringPusherZAxis(0, Vector3(-150, 50, 150), Vector3(15, 8, 2), 5.0f, 12.5f, 0.2f);
+
+
+	GameObject* block = AddOBBCubeToWorld(0, Vector3(-125, 50, 125), Vector3(15, 8, 2), 1.0f, true, moveableObjectColour);
+	block->GetRenderObject()->SetColour(moveableObjectColour);
+	block->GetPhysicsObject()->SetAppliesGravity(false);
+	GameObject* sphere = AddSphereToWorld(0, Vector3(-150, 50, 150), 2.5f, 0.0f);;
+	sphere->GetRenderObject()->SetColour(moveableObjectColour);
+	sphere->GetPhysicsObject()->SetAppliesGravity(false);
+	FacingConstraint* faceConstraint = new FacingConstraint(block, Vector3(-150, 50, 150));
+	world->AddConstraint(faceConstraint);
+
+
+
 
 	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
 
@@ -1185,16 +1199,18 @@ void TutorialGame::AddBallPusherZAxis(int layer, const Vector3& position)
 	world->AddConstraint(constraint);
 }
 
-void TutorialGame::AddSpringPusherZAxis(int layer, const Vector3& origin, const Vector3& size, float length, float snappiness)
+void TutorialGame::AddSpringPusherZAxis(int layer, const Vector3& origin, const Vector3& size, float length, float snappiness, float damping)
 {
-	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 1.0f, true, moveableObjectColour);
+	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 15.0f, true, moveableObjectColour);
 	block->GetRenderObject()->SetColour(moveableObjectColour);
 	block->GetPhysicsObject()->SetAppliesGravity(false);
 
-	Spring* spring = new Spring(length, snappiness);
-	SpringConstraint* springConstraint = new SpringConstraint(block, Vector3(-150, 40, 150), spring);
+	Spring* spring = new Spring(length, snappiness, damping);
+	SpringConstraint* springConstraint = new SpringConstraint(block, origin, spring);
+	FacingConstraint* faceConstraint = new FacingConstraint(block, origin);
 
 	world->AddConstraint(springConstraint);
+	world->AddConstraint(faceConstraint);
 }
 
 StateGameObject* TutorialGame::AddStateSphereObjectToWorld(int layer, ObjectMovement movement, const Vector3& position, const float radius, float inverseMass)

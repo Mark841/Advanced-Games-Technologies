@@ -81,8 +81,8 @@ namespace NCL {
 			void AddBallFlickerVertical(int layer, const Vector3& position, bool above);
 			void AddBallPusherXAxis(int layer, const Vector3& position);
 			void AddBallPusherZAxis(int layer, const Vector3& position);
-			void AddSpringPusherXAxis(int layer, const Vector3& position, const Vector3& size, float length, float snappiness);
-			void AddSpringPusherZAxis(int layer, const Vector3& position, const Vector3& size, float length, float snappiness);
+			void AddSpringPusherXAxis(int layer, const Vector3& position, const Vector3& size, float length, float snappiness, float damping);
+			void AddSpringPusherZAxis(int layer, const Vector3& position, const Vector3& size, float length, float snappiness, float damping);
 			
 			StateGameObject* AddStateSphereObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const float radius, float inverseMass);
 			StateGameObject* AddStateCubeObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const Vector3 size, float inverseMass);

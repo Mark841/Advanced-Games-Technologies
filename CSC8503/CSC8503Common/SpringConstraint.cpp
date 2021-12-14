@@ -12,9 +12,8 @@ void SpringConstraint::UpdateConstraint(float dt)
 	if (abs(offset) > 0.01f)
 	{
 		Vector3 offsetDir = relativePos.Normalised();
-		Vector3 velocity = object->GetPhysicsObject()->GetLinearVelocity();
 
-		Vector3 force = offsetDir * -(spring->GetSnappiness());
+		Vector3 force = (offsetDir * -(spring->GetSnappiness())) * spring->GetDamping();
 
 		object->GetPhysicsObject()->ApplyLinearImpulse(force);
 	}
