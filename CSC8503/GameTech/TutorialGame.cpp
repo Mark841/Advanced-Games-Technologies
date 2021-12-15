@@ -100,7 +100,7 @@ void TutorialGame::UpdateGame(float dt) {
 		}
 		if (speedPowerUpActive == false && speedPowerUpTimer > 15.0f)
 		{
-			PowerUpObject* powerUp = (rand() % 2) ? AddPowerUpObjectToWorld(0, "POWER UP", mapCentre + Vector3(125, 5, 75), 0.0f, PowerUp::SPEED_UP) : AddPowerUpObjectToWorld(0, "POWER UP", mapCentre + Vector3(150, 5, 75), 0.0f, PowerUp::SPEED_UP);
+			PowerUpObject* powerUp = (rand() % 2) ? AddPowerUpObjectToWorld(0, "POWER UP", mapCentre + Vector3(125, 5, 75), 0.0f, PowerUp::SPEED_UP) : AddPowerUpObjectToWorld(0, "POWER UP", mapCentre + Vector3(-75, 5, 25), 0.0f, PowerUp::SPEED_UP);
 			powerUps.emplace_back(powerUp); 
 			speedPowerUpActive = true;
 		}
@@ -134,7 +134,7 @@ void TutorialGame::UpdateGame(float dt) {
 				}
 				if (p->GetAbility() == PowerUp::ATTACH)
 				{
-					attachedBallConstraint = new PositionConstraint(endPoint, playerBall, 11);
+					attachedBallConstraint = new PositionConstraint(endPoint, playerBall, 5);
 					world->AddConstraint(attachedBallConstraint);
 
 					world->RemoveGameObject(p);
@@ -249,7 +249,7 @@ void TutorialGame::UpdateKeys() {
 		{
 			world->RemoveConstraint(attachedBallConstraint, true);
 			attachedBallConstraint = nullptr;
-			powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-175, 5, 0), 0.0f, PowerUp::ATTACH));
+			powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", mapCentre +  Vector3(-175, 5, 0), 0.0f, PowerUp::ATTACH));
 		}
 	}
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::I)) {
@@ -462,7 +462,7 @@ void TutorialGame::DrawTextDebugs()
 {
 	if (paused)
 	{
-		Debug::Print("PRESS P TO UNPAUSE", Vector2(35, 50));
+		Debug::Print("PRESS U TO UNPAUSE", Vector2(35, 50));
 	}
 	else if (finished)
 	{

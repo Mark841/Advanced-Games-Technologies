@@ -212,7 +212,7 @@ class PauseScreen : public PushdownState
 {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override
 	{
-		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::P) || Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE))
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::U) || Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE))
 		{
 			return PushdownResult::Pop;
 		}
