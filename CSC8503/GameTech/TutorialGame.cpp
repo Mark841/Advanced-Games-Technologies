@@ -27,6 +27,8 @@ TutorialGame::TutorialGame(int level)	{
 	inSelectionMode = false;
 	this->level = level;
 	playerCanMoveBall = false;
+	speedPowerUpActive = false;
+	speedPowerUpTimer = 0.0f;
 
 	Debug::SetRenderer(renderer);
 
@@ -90,12 +92,23 @@ void TutorialGame::UpdateGame(float dt) {
 		{
 			playerBall->GetTransform().SetPosition(respawnPoint);
 		}
+		if (speedPowerUpActive == false && speedPowerUpTimer > 15.0f)
+		{
+			PowerUpObject* powerUp = (rand() % 2) ? AddPowerUpObjectToWorld(0, "POWER UP", Vector3(125, 5, 75), 0.0f, PowerUp::SPEED_UP) : AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-50, 5, 75), 0.0f, PowerUp::SPEED_UP);
+			powerUps.emplace_back(powerUp); 
+			speedPowerUpActive = true;
+		}
 		for (DestinationObject* d : checkpoints)
 		{
 			if (d != nullptr && d->GetTriggered())
 			{
 				respawnPoint = d->GetTransform().GetPosition() + Vector3(25, 15, 0);
 			}
+		}
+		for (StateGameObject* e : enemies)
+		{
+			e->UpdatePlayerPos(playerBall);
+			e->UpdatePowerUps(powerUps);
 		}
 		for (PowerUpObject* p : powerUps)
 		{
@@ -122,6 +135,24 @@ void TutorialGame::UpdateGame(float dt) {
 				if (p->GetAbility() == PowerUp::DECREASE_TIME)
 				{
 					totalTime -= 1.2f;
+					world->RemoveGameObject(p);
+				}
+				if (p->GetAbility() == PowerUp::SPEED_UP)
+				{
+					for (StateGameObject* e : enemies)
+					{
+						if (abs((p->GetTransform().GetPosition() - e->GetTransform().GetPosition()).Length()) < 10.0f)
+						{
+							e->AddToForceMultiplier(0.5f);
+						}
+					}
+					if (abs((p->GetTransform().GetPosition() - playerBall->GetTransform().GetPosition()).Length()) < 10.0f)
+					{
+						playerBall->GetPhysicsObject()->SetLinearVelocity(playerBall->GetPhysicsObject()->GetLinearVelocity() * 3);
+						playerBall->GetPhysicsObject()->SetAngularVelocity(playerBall->GetPhysicsObject()->GetAngularVelocity() * 3);
+					}
+					speedPowerUpActive = false;
+					speedPowerUpTimer = 0.0f;
 					world->RemoveGameObject(p);
 				}
 				powerUps.erase(std::remove(powerUps.begin(), powerUps.end(), p), powerUps.end());
@@ -161,6 +192,8 @@ void TutorialGame::UpdateGame(float dt) {
 			//Debug::DrawAxisLines(lockedObject->GetTransform().GetMatrix(), 2.0f);
 		}
 	}
+	speedPowerUpTimer += dt;
+
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
 
@@ -334,7 +367,7 @@ void TutorialGame::InitWorld1() {
 	checkpoints.clear();
 	powerUps.clear();
 		
-	InitLevelOneMap();
+	InitLevelOneMap(Vector3(0,0,0));
 
 	playerBall = AddPlayerBallToWorld(2, Vector3(-150, 5, 150), 4.0f);
 
@@ -370,19 +403,23 @@ void TutorialGame::InitWorld2() {
 	physics->Clear();
 	checkpoints.clear();
 	powerUps.clear();
+	Vector3 mapCentre = Vector3(200, 0, 200);
 
-	world->GetMainCamera()->SetPosition(Vector3(-300, 325, 300));
+	world->GetMainCamera()->SetPosition(mapCentre + Vector3(-300, 325, 300));
+	InitLevelTwoMap(mapCentre);
+	checkpoints.emplace_back(AddCheckpointToWorld(mapCentre + Vector3(-150, 2, 25), Vector3(1, 1, 25)));
 
-	InitLevelTwoMap();
-	checkpoints.emplace_back(AddCheckpointToWorld(Vector3(-150, 2, 25), Vector3(1, 1, 25)));
-
-	playerBall = AddPlayerBallToWorld(2, Vector3(-175, 280, 175), 3.0f);
+	playerBall = AddPlayerBallToWorld(2, mapCentre + Vector3(-175, 280, 175), 3.0f);
 	playerCanMoveBall = true;
 	playerBall->SetObjectControllable(playerCanMoveBall);
 
-	endPoint = AttachableRopeConstraint(Vector3(-175, 65, 0), 25);
-	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-175, 5, 0), 0.0f, PowerUp::ATTACH));
+	endPoint = AttachableRopeConstraint(mapCentre + Vector3(-175, 65, 0), 25);
+	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", mapCentre + Vector3(-175, 5, 0), 0.0f, PowerUp::ATTACH));
 
+	StateGameObject* enemy = AddStateSphereObjectToWorld(2, ObjectMovement::AI, mapCentre + Vector3(150,15,-150), 4.0f, 5.0f, enemyColour);
+	enemy->UpdatePlayerPos(playerBall);
+	enemy->UpdatePowerUps(powerUps);
+	enemies.emplace_back(enemy);
 
 	useGravity = true; //Toggle gravity!
 	physics->UseGravity(useGravity);
@@ -628,13 +665,13 @@ GameObject* TutorialGame::AddSlimeToWorld(const Vector3& position, const Vector3
 	return floor;
 }
 
-void TutorialGame::AddWallsToFloor() {
-	AddLeftWallToWorld();
-	AddRightWallToWorld();
-	AddFrontWallToWorld();
-	AddBackWallToWorld();
+void TutorialGame::AddWallsToFloor(const Vector3& centre) {
+	AddLeftWallToWorld(centre);
+	AddRightWallToWorld(centre);
+	AddFrontWallToWorld(centre);
+	AddBackWallToWorld(centre);
 }
-GameObject* TutorialGame::AddLeftWallToWorld() 
+GameObject* TutorialGame::AddLeftWallToWorld(const Vector3& centre)
 {
 	GameObject* wallLeft = new GameObject(1, "WALL");
 
@@ -643,7 +680,7 @@ GameObject* TutorialGame::AddLeftWallToWorld()
 	wallLeft->SetBoundingVolume((CollisionVolume*)volume);
 	wallLeft->GetTransform()
 		.SetScale(wallSize * 2)
-		.SetPosition(Vector3(-200, 5, 0));
+		.SetPosition(centre + Vector3(-200, 5, 0));
 
 	wallLeft->SetRenderObject(new RenderObject(&wallLeft->GetTransform(), cubeMesh, basicTex, basicShader));
 	wallLeft->SetPhysicsObject(new PhysicsObject(&wallLeft->GetTransform(), wallLeft->GetBoundingVolume()));
@@ -655,7 +692,7 @@ GameObject* TutorialGame::AddLeftWallToWorld()
 
 	return wallLeft;
 }
-GameObject* TutorialGame::AddRightWallToWorld() 
+GameObject* TutorialGame::AddRightWallToWorld(const Vector3& centre)
 {
 	GameObject* wallRight = new GameObject(1, "WALL");
 
@@ -664,7 +701,7 @@ GameObject* TutorialGame::AddRightWallToWorld()
 	wallRight->SetBoundingVolume((CollisionVolume*)volume);
 	wallRight->GetTransform()
 		.SetScale(wallSize * 2)
-		.SetPosition(Vector3(200, 5, 0));
+		.SetPosition(centre + Vector3(200, 5, 0));
 
 	wallRight->SetRenderObject(new RenderObject(&wallRight->GetTransform(), cubeMesh, basicTex, basicShader));
 	wallRight->SetPhysicsObject(new PhysicsObject(&wallRight->GetTransform(), wallRight->GetBoundingVolume()));
@@ -676,7 +713,7 @@ GameObject* TutorialGame::AddRightWallToWorld()
 
 	return wallRight;
 }
-GameObject* TutorialGame::AddFrontWallToWorld() 
+GameObject* TutorialGame::AddFrontWallToWorld(const Vector3& centre)
 {
 	GameObject* wallFront = new GameObject(1, "WALL");
 
@@ -685,7 +722,7 @@ GameObject* TutorialGame::AddFrontWallToWorld()
 	wallFront->SetBoundingVolume((CollisionVolume*)volume);
 	wallFront->GetTransform()
 		.SetScale(wallSize * 2)
-		.SetPosition(Vector3(0, 5, -200));
+		.SetPosition(centre + Vector3(0, 5, -200));
 
 	wallFront->SetRenderObject(new RenderObject(&wallFront->GetTransform(), cubeMesh, basicTex, basicShader));
 	wallFront->SetPhysicsObject(new PhysicsObject(&wallFront->GetTransform(), wallFront->GetBoundingVolume()));
@@ -697,7 +734,7 @@ GameObject* TutorialGame::AddFrontWallToWorld()
 
 	return wallFront;
 }
-GameObject* TutorialGame::AddBackWallToWorld() 
+GameObject* TutorialGame::AddBackWallToWorld(const Vector3& centre)
 {
 	GameObject* wallBack = new GameObject(1, "WALL");
 
@@ -706,7 +743,7 @@ GameObject* TutorialGame::AddBackWallToWorld()
 	wallBack->SetBoundingVolume((CollisionVolume*)volume);
 	wallBack->GetTransform()
 		.SetScale(wallSize * 2)
-		.SetPosition(Vector3(0, 5, 200));
+		.SetPosition(centre + Vector3(0, 5, 200));
 
 	wallBack->SetRenderObject(new RenderObject(&wallBack->GetTransform(), cubeMesh, basicTex, basicShader));
 	wallBack->SetPhysicsObject(new PhysicsObject(&wallBack->GetTransform(), wallBack->GetBoundingVolume()));
@@ -719,40 +756,40 @@ GameObject* TutorialGame::AddBackWallToWorld()
 	return wallBack;
 }
 
-void TutorialGame::AddMazeFloor()
+void TutorialGame::AddMazeFloor(const Vector3& centre)
 {
-	AddFloorToWorld(Vector3(25, -2, 0), Vector3(175, 2, 200));
-	AddFloorToWorld(Vector3(-175, -2, -150), Vector3(25, 2, 50));
-	AddFloorToWorld(Vector3(-175, -2, 100), Vector3(25, 2, 100));
+	AddFloorToWorld(centre + Vector3(25, -2, 0), Vector3(175, 2, 200));
+	AddFloorToWorld(centre + Vector3(-175, -2, -150), Vector3(25, 2, 50));
+	AddFloorToWorld(centre + Vector3(-175, -2, 100), Vector3(25, 2, 100));
 }
-void TutorialGame::AddMazeWalls()
+void TutorialGame::AddMazeWalls(const Vector3& centre)
 {
-	AddWallToWorld(Vector3(-175, 5, -150), Vector3(25, 10, 1));
-	AddWallToWorld(Vector3(-100, 5, -150), Vector3(1, 10, 50));
-	AddWallToWorld(Vector3(-50, 5, -175), Vector3(1, 10, 25));
-	AddWallToWorld(Vector3(0, 5, -125), Vector3(1, 10, 25));
-	AddWallToWorld(Vector3(75, 5, -150), Vector3(25, 10, 1));
-	AddWallToWorld(Vector3(100, 5, -125), Vector3(1, 10, 25));
-	AddWallToWorld(Vector3(-25, 5, -100), Vector3(25, 10, 1));
-	AddWallToWorld(Vector3(125, 5, -100), Vector3(25, 10, 1));
-	AddWallToWorld(Vector3(-150, 5, -50), Vector3(1, 10, 50));
-	AddWallToWorld(Vector3(-100, 5, -50), Vector3(50, 10, 1));
-	AddWallToWorld(Vector3(-50, 5, -25), Vector3(1, 10, 75));
-	AddWallToWorld(Vector3(50, 5, -50), Vector3(50, 10, 1));
-	AddWallToWorld(Vector3(50, 5, -50), Vector3(1, 10, 50));
-	AddWallToWorld(Vector3(175, 5, -50), Vector3(25, 10, 1));
-	AddWallToWorld(Vector3(-150, 5, 50), Vector3(50, 10, 1));
-	AddWallToWorld(Vector3(-100, 5, 50), Vector3(1, 10, 50));
-	AddWallToWorld(Vector3(50, 5, 50), Vector3(100, 10, 1));
-	AddWallToWorld(Vector3(125, 5, 0), Vector3(25, 10, 1));
-	AddWallToWorld(Vector3(100, 5, 75), Vector3(1, 10, 75));
-	AddWallToWorld(Vector3(175, 5, 100), Vector3(25, 10, 1));
-	AddWallToWorld(Vector3(-25, 5, 100), Vector3(25, 10, 1));
-	AddWallToWorld(Vector3(-150, 5, 150), Vector3(1, 10, 50));
-	AddWallToWorld(Vector3(-100, 5, 175), Vector3(1, 10, 25));
-	AddWallToWorld(Vector3(-50, 5, 150), Vector3(1, 10, 50));
-	AddWallToWorld(Vector3(0, 5, 125), Vector3(1, 10, 25));
-	AddWallToWorld(Vector3(50, 5, 150), Vector3(1, 10, 50));
+	AddWallToWorld(centre + Vector3(-175, 5, -150), Vector3(25, 10, 1));
+	AddWallToWorld(centre + Vector3(-100, 5, -150), Vector3(1, 10, 50));
+	AddWallToWorld(centre + Vector3(-50, 5, -175), Vector3(1, 10, 25));
+	AddWallToWorld(centre + Vector3(0, 5, -125), Vector3(1, 10, 25));
+	AddWallToWorld(centre + Vector3(75, 5, -150), Vector3(25, 10, 1));
+	AddWallToWorld(centre + Vector3(100, 5, -125), Vector3(1, 10, 25));
+	AddWallToWorld(centre + Vector3(-25, 5, -100), Vector3(25, 10, 1));
+	AddWallToWorld(centre + Vector3(125, 5, -100), Vector3(25, 10, 1));
+	AddWallToWorld(centre + Vector3(-150, 5, -50), Vector3(1, 10, 50));
+	AddWallToWorld(centre + Vector3(-100, 5, -50), Vector3(50, 10, 1));
+	AddWallToWorld(centre + Vector3(-50, 5, -25), Vector3(1, 10, 75));
+	AddWallToWorld(centre + Vector3(50, 5, -50), Vector3(50, 10, 1));
+	AddWallToWorld(centre + Vector3(50, 5, -50), Vector3(1, 10, 50));
+	AddWallToWorld(centre + Vector3(175, 5, -50), Vector3(25, 10, 1));
+	AddWallToWorld(centre + Vector3(-150, 5, 50), Vector3(50, 10, 1));
+	AddWallToWorld(centre + Vector3(-100, 5, 50), Vector3(1, 10, 50));
+	AddWallToWorld(centre + Vector3(50, 5, 50), Vector3(100, 10, 1));
+	AddWallToWorld(centre + Vector3(125, 5, 0), Vector3(25, 10, 1));
+	AddWallToWorld(centre + Vector3(100, 5, 75), Vector3(1, 10, 75));
+	AddWallToWorld(centre + Vector3(175, 5, 100), Vector3(25, 10, 1));
+	AddWallToWorld(centre + Vector3(-25, 5, 100), Vector3(25, 10, 1));
+	AddWallToWorld(centre + Vector3(-150, 5, 150), Vector3(1, 10, 50));
+	AddWallToWorld(centre + Vector3(-100, 5, 175), Vector3(1, 10, 25));
+	AddWallToWorld(centre + Vector3(-50, 5, 150), Vector3(1, 10, 50));
+	AddWallToWorld(centre + Vector3(0, 5, 125), Vector3(1, 10, 25));
+	AddWallToWorld(centre + Vector3(50, 5, 150), Vector3(1, 10, 50));
 }
 void TutorialGame::AddFunnel(const Vector3& holeCentre, int heightAboveFloor)
 {
@@ -800,11 +837,11 @@ void TutorialGame::AddFunnelFloorWithObstacles(const Vector3& holeCentre, int he
 	AddCapsuleToWorld(0, holeCentre + Vector3(-22.5f, heightAboveFloor + 50, -70), 8.0f, 4.0f, 0.0f);
 }
 
-void TutorialGame::AddWallSeperators()
+void TutorialGame::AddWallSeperators(const Vector3& centre)
 {
-	AddWallToWorld(Vector3(-100, 5, 50), Vector3(2, 10, 150));
-	AddWallToWorld(Vector3(0, 5, -50), Vector3(2, 10, 150));
-	AddWallToWorld(Vector3(100, 5, 50), Vector3(2, 10, 150));
+	AddWallToWorld(centre + Vector3(-100, 5, 50), Vector3(2, 10, 150));
+	AddWallToWorld(centre + Vector3(0, 5, -50), Vector3(2, 10, 150));
+	AddWallToWorld(centre + Vector3(100, 5, 50), Vector3(2, 10, 150));
 }
 GameObject* TutorialGame::AddWallToWorld(const Vector3& position, const Vector3& size)
 {
@@ -1098,43 +1135,43 @@ void TutorialGame::InitCubeGridWorld(int numRows, int numCols, float rowSpacing,
 void TutorialGame::InitDefaultFloor() {
 	AddFloorToWorld(Vector3(0, -2, 0), Vector3(200, 2, 200));
 }
-void TutorialGame::InitLevelOneMap() 
+void TutorialGame::InitLevelOneMap(const Vector3& centre)
 {
-	AddFloorToWorld(Vector3(-100, -2, 0), Vector3(100, 2, 200));
-	AddFloorToWorld(Vector3(50, -2, 150), Vector3(50, 2, 50));
-	AddFloorToWorld(Vector3(50, -2, -150), Vector3(50, 2, 50));
-	AddFloorToWorld(Vector3(150, -2, -150), Vector3(50, 2, 50));
-	AddIceToWorld(Vector3(125, -2, 0), Vector3(25, 2, 100));
-	AddSlimeToWorld(Vector3(175, -2, 0), Vector3(25, 2, 100));
-	AddFloorToWorld(Vector3(150, -2, 150), Vector3(50, 2, 50));
-	AddWallsToFloor();
-	AddWallSeperators();
+	AddFloorToWorld(centre + Vector3(-100, -2, 0), Vector3(100, 2, 200));
+	AddFloorToWorld(centre + Vector3(50, -2, 150), Vector3(50, 2, 50));
+	AddFloorToWorld(centre + Vector3(50, -2, -150), Vector3(50, 2, 50));
+	AddFloorToWorld(centre + Vector3(150, -2, -150), Vector3(50, 2, 50));
+	AddIceToWorld(centre + Vector3(125, -2, 0), Vector3(25, 2, 100));
+	AddSlimeToWorld(centre + Vector3(175, -2, 0), Vector3(25, 2, 100));
+	AddFloorToWorld(centre + Vector3(150, -2, 150), Vector3(50, 2, 50));
+	AddWallsToFloor(centre);
+	AddWallSeperators(centre);
 
-	Vector3 startposition = Vector3(-150, 0, 150);
-	respawnPoint = startposition + Vector3(0, 15, 0);
-	AddStartToWorld(startposition, Vector3(10, 1, 10));
-	killPlane = AddKillPlaneToWorld(Vector3(0, -50, 0), Vector3(1000, 2, 1000));
-	finish = AddFinishToWorld(Vector3(150, 5, 195), Vector3(50, 10, 2));
+	Vector3 startposition = centre + Vector3(-150, 0, 150);
+	respawnPoint = centre + startposition + Vector3(0, 15, 0);
+	AddStartToWorld(centre + startposition, Vector3(10, 1, 10));
+	killPlane = AddKillPlaneToWorld(centre + Vector3(0, -50, 0), Vector3(1000, 2, 1000));
+	finish = AddFinishToWorld(centre + Vector3(150, 5, 195), Vector3(50, 10, 2));
 }
-void TutorialGame::InitLevelTwoMap()
+void TutorialGame::InitLevelTwoMap(const Vector3& centre)
 {
-	AddMazeFloor();
-	AddWallsToFloor();
-	AddMazeWalls();
-	AddFunnel(Vector3(-175, 0, 175), 200);
-	AddFunnelFloorWithObstacles(Vector3(-175, 0, 175), 200);
+	AddMazeFloor(centre);
+	AddWallsToFloor(centre);
+	AddMazeWalls(centre);
+	AddFunnel(centre + Vector3(-175, 0, 175), 200);
+	AddFunnelFloorWithObstacles(centre + Vector3(-175, 0, 175), 200);
 
-	GameObject* floor = AddOBBCubeToWorld(0, Vector3(-175, 275, 175), Vector3(60, 1, 60), 5.0f, true, moveableObjectColour, "PIVOTABLE CUBE");
+	GameObject* floor = AddOBBCubeToWorld(0, centre + Vector3(-175, 275, 175), Vector3(60, 1, 60), 5.0f, true, moveableObjectColour, "PIVOTABLE CUBE");
 	floor->GetPhysicsObject()->SetAppliesGravity(false);
 	floor->GetRenderObject()->SetColour(moveableObjectColour);
-	LockingPositionConstraint* fixPosition = new LockingPositionConstraint(floor, Vector3(-175, 275, 175));
+	LockingPositionConstraint* fixPosition = new LockingPositionConstraint(floor, centre + Vector3(-175, 275, 175));
 	world->AddConstraint(fixPosition);
 
-	Vector3 startposition = Vector3(-175, -0.5f, 175);
+	Vector3 startposition = centre + Vector3(-175, -0.5f, 175);
 	respawnPoint = startposition + Vector3(0, 15, 0);
 	AddStartToWorld(startposition, Vector3(25, 1, 25));
-	killPlane = AddKillPlaneToWorld(Vector3(0, -50, 0), Vector3(1000, 2, 1000));
-	finish = AddFinishToWorld(Vector3(0, -0.5f, 0), Vector3(25, 1, 25));
+	killPlane = AddKillPlaneToWorld(centre + Vector3(0, -50, 0), Vector3(1000, 2, 1000));
+	finish = AddFinishToWorld(centre + Vector3(0, -0.5f, 0), Vector3(25, 1, 25));
 }
 
 void TutorialGame::InitGameExamples() {
@@ -1370,17 +1407,19 @@ void TutorialGame::AddSpringPusherZAxis(int layer, const Vector3& origin, const 
 	world->AddConstraint(faceConstraint);
 }
 
-StateGameObject* TutorialGame::AddStateSphereObjectToWorld(int layer, ObjectMovement movement, const Vector3& position, const float radius, float inverseMass)
+StateGameObject* TutorialGame::AddStateSphereObjectToWorld(int layer, ObjectMovement movement, const Vector3& position, const float radius, float inverseMass, Vector4 colour)
 {
 	StateGameObject* sphere = new StateGameObject(movement, layer, "STATE SPHERE");
+	sphere->SetBaseColour(colour);
 
-	SphereVolume* volume = new SphereVolume(radius);
+	SphereVolume* volume = new SphereVolume(false, radius);
 	sphere->SetBoundingVolume((CollisionVolume*)volume);
 	sphere->GetTransform()
 		.SetScale(Vector3(radius, radius, radius))
 		.SetPosition(position);
 
 	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, basicTex, basicShader));
+	sphere->GetRenderObject()->SetColour(colour);
 	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
 
 	sphere->GetPhysicsObject()->SetInverseMass(inverseMass);
@@ -1390,9 +1429,10 @@ StateGameObject* TutorialGame::AddStateSphereObjectToWorld(int layer, ObjectMove
 
 	return sphere;
 }
-StateGameObject* TutorialGame::AddStateCubeObjectToWorld(int layer, ObjectMovement movement, const Vector3& position, const Vector3& size, float inverseMass)
+StateGameObject* TutorialGame::AddStateCubeObjectToWorld(int layer, ObjectMovement movement, const Vector3& position, const Vector3& size, float inverseMass, Vector4 colour)
 {
 	StateGameObject* cube = new StateGameObject(movement, layer, "STATE CUBE");
+	cube->SetBaseColour(colour);
 
 	OBBVolume* volume = new OBBVolume(size/2);
 	cube->SetBoundingVolume((CollisionVolume*)volume);
@@ -1401,6 +1441,7 @@ StateGameObject* TutorialGame::AddStateCubeObjectToWorld(int layer, ObjectMoveme
 		.SetScale(size);
 
 	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+	cube->GetRenderObject()->SetColour(colour);
 	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
 
 	cube->GetPhysicsObject()->SetInverseMass(inverseMass);

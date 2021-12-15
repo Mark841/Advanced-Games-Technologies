@@ -34,8 +34,8 @@ namespace NCL {
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
 			void InitDefaultFloor();
 
-			void InitLevelOneMap();
-			void InitLevelTwoMap();
+			void InitLevelOneMap(const Vector3& centre);
+			void InitLevelTwoMap(const Vector3& centre);
 
 			void XAxisBridgeConstraint(const Vector3& position);
 			void ZAxisBridgeConstraint(const Vector3& position);
@@ -52,20 +52,20 @@ namespace NCL {
 			GameObject* AddIceToWorld(const Vector3& position, const Vector3& size);
 			GameObject* AddSlimeToWorld(const Vector3& position, const Vector3& size);
 
-			void AddWallsToFloor();
-			GameObject* AddLeftWallToWorld();
-			GameObject* AddRightWallToWorld();
-			GameObject* AddFrontWallToWorld();
-			GameObject* AddBackWallToWorld();
+			void AddWallsToFloor(const Vector3& centre);
+			GameObject* AddLeftWallToWorld(const Vector3& centre);
+			GameObject* AddRightWallToWorld(const Vector3& centre);
+			GameObject* AddFrontWallToWorld(const Vector3& centre);
+			GameObject* AddBackWallToWorld(const Vector3& centre);
 
-			void AddMazeFloor();
-			void AddMazeWalls();
+			void AddMazeFloor(const Vector3& centre);
+			void AddMazeWalls(const Vector3& centre);
 
 			void AddFunnel(const Vector3& holeCentre, int heightAboveFloor);
 			void AddFunnelFloor(const Vector3& holeCentre, int heightAboveFloor);
 			void AddFunnelFloorWithObstacles(const Vector3& holeCentre, int heightAboveFloor);
 
-			void AddWallSeperators();
+			void AddWallSeperators(const Vector3& centre);
 			GameObject* AddWallToWorld(const Vector3& position, const Vector3& size);
 			DestinationObject* AddStartToWorld(const Vector3& position, const Vector3& size);
 			DestinationObject* AddFinishToWorld(const Vector3& position, const Vector3& size);
@@ -96,8 +96,8 @@ namespace NCL {
 			void AddSpringPusherXAxis(int layer, const Vector3& position, const Vector3& size, float length, float snappiness, float damping);
 			void AddSpringPusherZAxis(int layer, const Vector3& position, const Vector3& size, float length, float snappiness, float damping);
 			
-			StateGameObject* AddStateSphereObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const float radius, float inverseMass);
-			StateGameObject* AddStateCubeObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const Vector3& size, float inverseMass);
+			StateGameObject* AddStateSphereObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const float radius, float inverseMass, Vector4 colour = Vector4(1, 1, 1, 1));
+			StateGameObject* AddStateCubeObjectToWorld(int layer, const ObjectMovement movement, const Vector3& position, const Vector3& size, float inverseMass, Vector4 colour = Vector4(1, 1, 1, 1));
 			PowerUpObject* AddPowerUpObjectToWorld(int layer, string name, const Vector3& position, float inverseMass, PowerUp ability);
 
 			GameTechRenderer*	renderer;
@@ -110,12 +110,15 @@ namespace NCL {
 			bool playerCanMoveBall;
 			bool paused;
 			bool inSelectionMode;
+			bool speedPowerUpActive;
+			float speedPowerUpTimer;
 			int level;
 			float totalTime;
 			Vector3 respawnPoint;
 			Vector4 moveableObjectColour = Vector4(0.5f, 1, 0.5f, 1);
 			Vector4 pickupObjectColour = Vector4(0.5f, 1, 1, 1);
 			Vector4 checkpointColour = Vector4(1, 0.5f, 0.5f, 1);
+			Vector4 enemyColour = Vector4(1, 0, 0, 1);
 
 			float		forceMagnitude;
 
@@ -126,6 +129,7 @@ namespace NCL {
 			DestinationObject* killPlane = nullptr;
 			std::vector<PowerUpObject*> powerUps;
 			std::vector<DestinationObject*> checkpoints;
+			std::vector<StateGameObject*> enemies;
 			GameObject* playerBall = nullptr;
 
 			OGLMesh*	capsuleMesh = nullptr;

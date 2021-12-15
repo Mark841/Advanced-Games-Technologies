@@ -12,6 +12,7 @@ namespace NCL
 			INCREASE_FRICTION,
 			ATTACH,
 			DECREASE_TIME,
+			SPEED_UP,
 			NONE
 		};
 		class PowerUpObject : public DestinationObject

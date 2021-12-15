@@ -2,6 +2,7 @@
 #include "../CSC8503Common/StateTransition.h"
 #include "../CSC8503Common/StateMachine.h"
 #include "../CSC8503Common/State.h"
+#include "../CSC8503Common/Debug.cpp"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -9,6 +10,8 @@ using namespace CSC8503;
 StateGameObject::StateGameObject(ObjectMovement movement, int layer, string name) : GameObject(layer, name)
 {
 	counter = 0.0f;
+	forceMultiplier = 1.0f;
+	grid = NavigationGrid("LevelTwoMaze.txt");
 	switch (movement)
 	{
 	case(ObjectMovement::MOVING):
@@ -19,6 +22,9 @@ StateGameObject::StateGameObject(ObjectMovement movement, int layer, string name
 		break;
 	case(ObjectMovement::SPIN):
 		InitSpinning();
+		break;
+	case(ObjectMovement::AI):
+		InitAI();
 		break;
 	}
 }
@@ -45,6 +51,14 @@ void StateGameObject::OnCollisionEnd(GameObject* otherObject)
 	{
 		collisionWithPlayerBall = nullptr;
 	}
+}
+float StateGameObject::DistanceFromObject(GameObject* otherObject)
+{
+	// May wanna change this function to return path length not just direct line length
+
+	Vector3 pos = this->GetTransform().GetPosition();
+	Vector3 otherObjectPos = otherObject->GetTransform().GetPosition();
+	return abs((otherObjectPos - pos).Length());
 }
 
 void StateGameObject::InitMoving()
@@ -150,6 +164,80 @@ void StateGameObject::InitSpinning()
 			return (collisionWithPlayerBall == nullptr);
 		}));
 }
+void StateGameObject::InitAI()
+{
+	stateMachine = new StateMachine();
+
+	State* huntPlayer = new State([&](float dt)->void
+		{
+			this->Hunt(dt, 1);
+		});
+	State* wander = new State([&](float dt)->void
+		{
+			this->Wander(dt);
+		});
+	State* goForPowerUp = new State([&](float dt)->void
+		{
+			this->Hunt(dt, 2);
+		});
+
+	stateMachine->AddState(huntPlayer);
+	stateMachine->AddState(wander);
+	stateMachine->AddState(goForPowerUp);
+
+	stateMachine->AddTransition(new StateTransition(huntPlayer, goForPowerUp, [&](void)->bool
+		{
+			for (PowerUpObject* p : powerUps)
+			{
+				if (p->GetAbility() == PowerUp::SPEED_UP && DistanceFromObject(playerBall) > DistanceFromObject(p))
+				{
+					return true;
+				}
+			}
+			return false;
+		}));
+	stateMachine->AddTransition(new StateTransition(goForPowerUp, huntPlayer, [&](void)->bool
+		{
+			for (PowerUpObject* p : powerUps)
+			{
+				if (p->GetAbility() == PowerUp::SPEED_UP && DistanceFromObject(playerBall) > DistanceFromObject(p))
+				{
+					return false;
+				}
+			}
+			return true;
+		}));
+	stateMachine->AddTransition(new StateTransition(huntPlayer, wander, [&](void)->bool
+		{
+			return DistanceFromObject(playerBall) > 150.0f;
+		}));
+	stateMachine->AddTransition(new StateTransition(wander, huntPlayer, [&](void)->bool
+		{
+			return DistanceFromObject(playerBall) < 150.0f;
+		}));
+	stateMachine->AddTransition(new StateTransition(goForPowerUp, wander, [&](void)->bool
+		{
+			for (PowerUpObject* p : powerUps)
+			{
+				if (DistanceFromObject(p) > 150.0f)
+				{
+					return true;
+				}
+			}
+			return false;
+		}));
+	stateMachine->AddTransition(new StateTransition(wander, goForPowerUp, [&](void)->bool
+		{
+			for (PowerUpObject* p : powerUps)
+			{
+				if (DistanceFromObject(p) > 150.0f)
+				{
+					return false;
+				}
+			}
+			return false;
+		}));
+}
 
 void StateGameObject::MoveLeft(float dt)
 {
@@ -190,4 +278,48 @@ void StateGameObject::SpinClockwise(float dt)
 void StateGameObject::Inactive()
 {
 	this->SetState(States::INACTIVE);
+}
+
+void StateGameObject::Hunt(float dt, int huntingTarget)
+{
+	Vector3 startPos;
+	Vector3 endPos;
+	if (huntingTarget == 1)
+	{ // Player
+		endPos = playerBall->GetTransform().GetPosition();
+	}
+	else if (huntingTarget == 2)
+	{ // PowerUp
+		float distance = FLT_MAX;
+		for (PowerUpObject* p : powerUps)
+		{
+			Vector3 powerUpPos = p->GetTransform().GetPosition();
+			if (abs((this->GetTransform().GetPosition() - powerUpPos).Length()) < distance)
+			{// if this power up distance is less than the last
+				endPos = powerUpPos;
+			}
+		}
+	}
+
+	startPos.y = 0;
+	endPos.y = 0;
+
+	NavigationPath outPath;
+	vector<Vector3> nodes;
+
+	bool found = grid.FindPath(startPos, endPos, outPath);
+
+	Vector3 pos;
+	while (outPath.PopWaypoint(pos))
+	{
+		nodes.push_back(pos);
+	}
+
+	Vector3 a = nodes[0];
+	Vector3 b = nodes[1];
+
+	Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
+}
+void StateGameObject::Wander(float dt) {
+
 }

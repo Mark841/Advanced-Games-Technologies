@@ -97,7 +97,6 @@ bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, Navigation
 	GridNode* endNode	= &allNodes[(toZ * gridWidth) + toX];
 
 	std::vector<GridNode*>  openList;
-	std::vector<GridNode*>  closedList;
 
 	openList.emplace_back(startNode);
 
@@ -124,8 +123,7 @@ bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, Navigation
 				if (!neighbour) { //might not be connected...
 					continue;
 				}	
-				bool inClosed = NodeInList(neighbour, closedList);
-				if (inClosed) {
+				if (neighbour->closed) {
 					continue; //already discarded this neighbour...
 				}
 
@@ -144,7 +142,7 @@ bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, Navigation
 					neighbour->g = g;
 				}
 			}
-			closedList.emplace_back(currentBestNode);
+			currentBestNode->closed = true;
 		}
 	}
 	return false; //open list emptied out with no path!

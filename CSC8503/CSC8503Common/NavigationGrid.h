@@ -15,6 +15,7 @@ namespace NCL {
 			float g;
 
 			int type;
+			bool closed;
 
 			GridNode() {
 				for (int i = 0; i < 4; ++i) {
@@ -25,6 +26,7 @@ namespace NCL {
 				g = 0;
 				type = 0;
 				parent = nullptr;
+				closed = false;
 			}
 			~GridNode() {	}
 		};
