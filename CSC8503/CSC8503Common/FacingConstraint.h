@@ -15,19 +15,24 @@ namespace NCL
 
 			FacingConstraint(GameObject* a, Vector3 origin)
 			{
-				object = a;
+				objectA = a;
+				objectB = nullptr;
 				this->origin = origin;
+			}
+			FacingConstraint(GameObject* a, GameObject* b)
+			{
+				objectA = a;
+				objectB = b;
+				origin = Vector3();
 			}
 			~FacingConstraint() {}
 
 			void UpdateConstraint(float dt) override;
 
 		protected:
-			GameObject* object;
+			GameObject* objectA;
+			GameObject* objectB;
 			Vector3 origin;
-
-			float xAngle;
-			float yAngle;
 		};
 	}
 }

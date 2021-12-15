@@ -511,29 +511,28 @@ void TutorialGame::ZAxisBridgeConstraint(const Vector3& position, int length) {
 	world->AddConstraint(constraint);
 }
 GameObject* TutorialGame::AttachableRopeConstraint(const Vector3& topPosition, int length) {
-	Vector3 cubeSize = Vector3(2, 5, 2);
+	Vector3 cubeSize = Vector3(0.5f, 0.5f, 1.5f);
 
 	float invCubeMass = 100.0f; // how heavy the middle pieces are
-	int numLinks = length / 5.5f;
-	float maxDistance = 11; // constraint distance
-	float maxAngle = 30; // constraint rotation
-	float cubeDistance = 10; // distance between links
+	int numLinks = length / 1.5f;
+	float maxDistance = 3; // constraint distance
+	float cubeDistance = 1; // distance between links
 
 	Vector3 startPos = topPosition;
 
-	GameObject* start = AddAABBCubeToWorld(0, startPos + Vector3(0, 0, 0), cubeSize, 0);
+	GameObject* start = AddAABBCubeToWorld(0, startPos + Vector3(0, 0, 0), Vector3(2,2,2), 0);
 
 	GameObject* previous = start;
 
 	for (int i = 0; i < numLinks; ++i)
 	{
-		GameObject* block = AddOBBCubeToWorld(2, startPos + Vector3(0, -(i + 1) * cubeDistance, 0), cubeSize, invCubeMass, true, moveableObjectColour);
+		GameObject* block = AddOBBCubeToWorld(2, startPos + Vector3(0, -(i + 1) * cubeDistance, 1), cubeSize, invCubeMass, true, moveableObjectColour);
 		block->GetRenderObject()->SetColour(moveableObjectColour);
 		PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
-		SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::ROLL);
+		FacingConstraint* faceConstraint = new FacingConstraint(block, previous);
 
 		world->AddConstraint(posConstraint);
-		world->AddConstraint(orientConstraint);
+		world->AddConstraint(faceConstraint);
 		previous = block;
 	}
 	return previous;

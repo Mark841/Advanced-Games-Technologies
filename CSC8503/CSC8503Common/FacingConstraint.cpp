@@ -7,9 +7,16 @@ using namespace NCL::CSC8503;
 
 void FacingConstraint::UpdateConstraint(float dt)
 {
-	Vector3 pos = object->GetTransform().GetPosition();
+	if (objectB != nullptr)
+	{
+		origin = objectB->GetTransform().GetPosition();
+	}
+	Vector3 pos = objectA->GetTransform().GetPosition();
 	Vector3 relativePos = origin - pos;
 	Vector3 orient = pos - origin;
+
+	float xAngle;
+	float yAngle;
 
 	if (orient.z != 0)
 	{
@@ -36,8 +43,5 @@ void FacingConstraint::UpdateConstraint(float dt)
 		yAngle = 0;
 	}
 
-	Vector3 o = object->GetTransform().GetOrientation().ToEuler();
-
-	object->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(-xAngle, yAngle, 0));
-	Vector3 o1 = object->GetTransform().GetOrientation().ToEuler();
+	objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(-xAngle, yAngle, 0));
 }
