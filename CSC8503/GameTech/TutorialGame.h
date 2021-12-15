@@ -72,11 +72,10 @@ namespace NCL {
 			DestinationObject* AddCheckpointToWorld(const Vector3& position, const Vector3& size);
 			DestinationObject* AddKillPlaneToWorld(const Vector3& position, const Vector3& size);
 
-			void RampObstacles();
-			void TiltingConstraintObstacles();
+			void TiltingConstraintObstacles(const Vector3& centre);
 			void SpinningObstacles(const Vector3& centrePosition);
 			void MovingObstacles(const Vector3& centrePosition);
-			void AddFlickerObjects(const Vector3& centrePosition);
+			void AddFlickerObjectsZAxis(const Vector3& centrePosition);
 
 			GameObject* AddSphereToWorld(int layer, const Vector3& position, float radius, float inverseMass = 10.0f, bool moveable = false, Vector4 baseColour = Vector4(1,1,1,1));
 			GameObject* AddAABBCubeToWorld(int layer, const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f, bool moveable = false, Vector4 baseColour = Vector4(1, 1, 1, 1), string name = "AABB CUBE");
@@ -89,7 +88,7 @@ namespace NCL {
 			GameObject* AddBonusToWorld(int layer, const Vector3& position);
 
 			GameObject* AddPlayerBallToWorld(int layer, const Vector3& position, const float radius);
-			void AddBallFlickerHorizontal(int layer, const Vector3& position, bool onLeft);
+			void AddBallFlickerHorizontalZ(int layer, const Vector3& position, bool onLeft);
 			void AddBallFlickerVertical(int layer, const Vector3& position, bool above);
 			void AddBallPusherXAxis(int layer, const Vector3& position);
 			void AddBallPusherZAxis(int layer, const Vector3& position);

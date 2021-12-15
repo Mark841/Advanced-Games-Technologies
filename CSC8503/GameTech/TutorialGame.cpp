@@ -408,17 +408,14 @@ void TutorialGame::InitWorld1() {
 
 	SpinningObstacles(Vector3(-50, 0, 50));
 	MovingObstacles(Vector3(-45, 0, -50));
-	AddFlickerObjects(Vector3(-150,0,0));
+	AddFlickerObjectsZAxis(Vector3(-150,0,0));
 
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-150, 7, -100), 0.0f, PowerUp::DECREASE_TIME));
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-50, 7, 50), 0.0f, PowerUp::DECREASE_TIME));
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(50, 5, 0), 0.0f, PowerUp::DECREASE_TIME));
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(125,7,-100), 0.0f, PowerUp::DECREASE_FRICTION));
 	powerUps.emplace_back(AddPowerUpObjectToWorld(0, "POWER UP", Vector3(175,7,-100), 0.0f, PowerUp::INCREASE_FRICTION));
-
-	RampObstacles();
-	TiltingConstraintObstacles();
-
+	
 	ZAxisBridgeConstraint(Vector3(50, -2, -100), 100);
 
 	AddSpringPusherXAxis(0, Vector3(-200, 5, -150), Vector3(5, 10, 50), 0.0f, 12.5f, 0.2f);
@@ -989,15 +986,13 @@ DestinationObject* TutorialGame::AddKillPlaneToWorld(const Vector3& position, co
 	return killPlane;
 }
 
-// TO DO
-void TutorialGame::RampObstacles()
+void TutorialGame::TiltingConstraintObstacles(const Vector3& centre)
 {
-
-}
-// TO DO
-void TutorialGame::TiltingConstraintObstacles() 
-{
-
+	GameObject* floor = AddOBBCubeToWorld(0, centre + Vector3(-175, 275, 175), Vector3(60, 1, 60), 5.0f, true, moveableObjectColour, "PIVOTABLE CUBE");
+	floor->GetPhysicsObject()->SetAppliesGravity(false);
+	floor->GetRenderObject()->SetColour(moveableObjectColour);
+	LockingPositionConstraint* fixPosition = new LockingPositionConstraint(floor, centre + Vector3(-175, 275, 175));
+	world->AddConstraint(fixPosition);
 }
 
 void TutorialGame::SpinningObstacles(const Vector3& centrePosition)
@@ -1014,12 +1009,12 @@ void TutorialGame::MovingObstacles(const Vector3& centrePosition)
 	AddStateCubeObjectToWorld(0, ObjectMovement::MOVING, centrePosition + Vector3(10, 5, 25), Vector3(25, 10, 2), 0.0f);
 	AddStateCubeObjectToWorld(0, ObjectMovement::MOVING, centrePosition + Vector3(-30, 5, 25), Vector3(25, 10, 2), 0.0f);
 }
-void TutorialGame::AddFlickerObjects(const Vector3& centrePosition)
+void TutorialGame::AddFlickerObjectsZAxis(const Vector3& centrePosition)
 {
-	AddBallFlickerHorizontal(2, centrePosition + Vector3(-30, 10, -30), true);
-	AddBallFlickerHorizontal(2, centrePosition + Vector3(-30, 10, 30), true);
-	AddBallFlickerHorizontal(2, centrePosition + Vector3(30, 10, -30), false);
-	AddBallFlickerHorizontal(2, centrePosition + Vector3(30, 10, 30), false);
+	AddBallFlickerHorizontalZ(2, centrePosition + Vector3(-30, 10, -30), true);
+	AddBallFlickerHorizontalZ(2, centrePosition + Vector3(-30, 10, 30), true);
+	AddBallFlickerHorizontalZ(2, centrePosition + Vector3(30, 10, -30), false);
+	AddBallFlickerHorizontalZ(2, centrePosition + Vector3(30, 10, 30), false);
 }
 
 /*
@@ -1195,11 +1190,7 @@ void TutorialGame::InitLevelTwoMap(const Vector3& centre)
 	AddFunnel(centre + Vector3(-175, 0, 175), 200);
 	AddFunnelFloorWithObstacles(centre + Vector3(-175, 0, 175), 200);
 
-	GameObject* floor = AddOBBCubeToWorld(0, centre + Vector3(-175, 275, 175), Vector3(60, 1, 60), 5.0f, true, moveableObjectColour, "PIVOTABLE CUBE");
-	floor->GetPhysicsObject()->SetAppliesGravity(false);
-	floor->GetRenderObject()->SetColour(moveableObjectColour);
-	LockingPositionConstraint* fixPosition = new LockingPositionConstraint(floor, centre + Vector3(-175, 275, 175));
-	world->AddConstraint(fixPosition);
+	TiltingConstraintObstacles(centre);
 
 	Vector3 startposition = centre + Vector3(-175, -0.5f, 175);
 	respawnPoint = startposition + Vector3(0, 15, 0);
@@ -1312,7 +1303,7 @@ GameObject* TutorialGame::AddPlayerBallToWorld(int layer, const Vector3& positio
 
 	return playerBall;
 }
-void TutorialGame::AddBallFlickerHorizontal(int layer, const Vector3& position, bool onLeft)
+void TutorialGame::AddBallFlickerHorizontalZ(int layer, const Vector3& position, bool onLeft)
 {
 	Vector3 cubeSize = Vector3(3, 8, 3);
 
@@ -1324,17 +1315,17 @@ void TutorialGame::AddBallFlickerHorizontal(int layer, const Vector3& position, 
 	Vector3 startPos = position;
 
 	GameObject* start = AddAABBCubeToWorld(0, startPos, cubeSize, 0);
-
-	GameObject* previous = start;
-
+	
 	GameObject* block = onLeft ? AddOBBCubeToWorld(layer, startPos + Vector3(2 * cubeDistance, 0, 0), Vector3(20, 8, 2), invCubeMass, true, moveableObjectColour) : AddOBBCubeToWorld(layer, startPos + Vector3(2 * -cubeDistance, 0, 0), Vector3(20, 8, 2), invCubeMass, true, moveableObjectColour);
 	
 	block->GetRenderObject()->SetColour(moveableObjectColour);
-	PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
-	SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::YAW);
+	PositionConstraint* posConstraint = new PositionConstraint(start, block, maxDistance);
+	LockingPositionConstraint* lockPosconstraint = new LockingPositionConstraint(block, start->GetTransform().GetPosition());
+	SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(start, block, maxAngle, Axis::YAW);
 
 	world->AddConstraint(posConstraint);
 	world->AddConstraint(orientConstraint);
+	world->AddConstraint(lockPosconstraint);
 }
 void TutorialGame::AddBallFlickerVertical(int layer, const Vector3& position, bool above)
 {
@@ -1348,17 +1339,17 @@ void TutorialGame::AddBallFlickerVertical(int layer, const Vector3& position, bo
 	Vector3 startPos = position;
 
 	GameObject* start = AddAABBCubeToWorld(0, startPos, cubeSize, 0);
-
-	GameObject* previous = start;
-
+	
 	GameObject* block = above ? AddOBBCubeToWorld(layer, startPos + Vector3(0, 2 * cubeDistance, 0), Vector3(8, 20, 1), invCubeMass, true, moveableObjectColour) : AddOBBCubeToWorld(layer, startPos + Vector3(0, 2 * -cubeDistance, 0), Vector3(8, 20, 1), invCubeMass, true, moveableObjectColour);
 	
 	block->GetRenderObject()->SetColour(moveableObjectColour);
-	PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
-	SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::PITCH);
+	PositionConstraint* posConstraint = new PositionConstraint(start, block, maxDistance);
+	LockingPositionConstraint* lockPosconstraint = new LockingPositionConstraint(block, start->GetTransform().GetPosition());
+	SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(start, block, maxAngle, Axis::PITCH);
 
 	world->AddConstraint(posConstraint);
 	world->AddConstraint(orientConstraint);
+	world->AddConstraint(lockPosconstraint);
 }
 
 void TutorialGame::AddBallPusherXAxis(int layer, const Vector3& position)
