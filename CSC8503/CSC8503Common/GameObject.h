@@ -18,6 +18,9 @@ enum class States
 	ROTATING_ANTICLOCKWISE,
 	SPINNING_CLOCKWISE,
 	SPINNING_ANTICLOCKWISE,
+	HUNTING_PLAYER,
+	HUNTING_POWER_UP,
+	WANDERING,
 	INACTIVE
 };
 
@@ -110,6 +113,9 @@ namespace NCL {
 				case (States::ROTATING_ANTICLOCKWISE): return "ROTATING ANTICLOCKWISE";
 				case (States::SPINNING_CLOCKWISE): return "SPINNING CLOCKWISE";
 				case (States::SPINNING_ANTICLOCKWISE): return "SPINNING ANTICLOCKWISE";
+				case (States::HUNTING_PLAYER): return "HUNTING PLAYER";
+				case (States::HUNTING_POWER_UP): return "HUNTING POWER UP";
+				case (States::WANDERING): return "WANDERING";
 				case (States::INACTIVE): return "INACTIVE";
 				}
 				return "UNKNOWN STATE";

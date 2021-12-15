@@ -55,12 +55,16 @@ void TestStateMachine()
 vector<Vector3> testNodes;
 void TestPathfinding()
 {
-	NavigationGrid grid("TestGrid1.txt");
+	//NavigationGrid grid("TestGrid1.txt");
+	//Vector3 startPos(80, 0, 10);
+	//Vector3 endPos(80, 0, 80);
+
+	NavigationGrid grid("LevelTwoMaze.txt");
+	Vector3 startPos(350, 0, 25);
+	Vector3 endPos(25, 0, 375);
 
 	NavigationPath outPath;
 
-	Vector3 startPos(80, 0, 10);
-	Vector3 endPos(80, 0, 80);
 	
 	bool found = grid.FindPath(startPos, endPos, outPath);
 
@@ -208,7 +212,7 @@ class PauseScreen : public PushdownState
 {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override
 	{
-		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::U) || Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE))
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::P) || Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE))
 		{
 			return PushdownResult::Pop;
 		}

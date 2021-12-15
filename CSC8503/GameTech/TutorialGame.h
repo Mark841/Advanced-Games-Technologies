@@ -113,6 +113,7 @@ namespace NCL {
 			bool speedPowerUpActive;
 			float speedPowerUpTimer;
 			int level;
+			bool reset;
 			float totalTime;
 			Vector3 respawnPoint;
 			Vector4 moveableObjectColour = Vector4(0.5f, 1, 0.5f, 1);

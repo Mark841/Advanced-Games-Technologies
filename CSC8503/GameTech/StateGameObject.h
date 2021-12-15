@@ -32,6 +32,7 @@ namespace NCL
 			void AddToForceMultiplier(float multiplier) { forceMultiplier += multiplier; }
 			void UpdatePowerUps(std::vector<PowerUpObject*> powerUps) { this->powerUps = powerUps; }
 			void UpdatePlayerPos(GameObject* player) { this->playerBall = player; }
+			bool EliminatedPlayer() const { return collisionWithPlayerBall; }
 
 		protected:
 			void InitMoving();
@@ -48,6 +49,7 @@ namespace NCL
 			void Inactive();
 			void Hunt(float dt, int huntingTarget);
 			void Wander(float dt);
+			bool Pathfind(const Vector3& startPos, const Vector3& endPos);
 
 			GameObject* collisionWithPlayerBall;
 			GameObject* playerBall;
@@ -56,7 +58,8 @@ namespace NCL
 			StateMachine* stateMachine;
 			float counter;
 			float forceMultiplier;
-			NavigationGrid grid;
+			Vector3 wanderDestination;
+			vector<Vector3> nodes;
 		};
 	}
 }

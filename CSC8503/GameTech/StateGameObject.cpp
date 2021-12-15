@@ -11,7 +11,6 @@ StateGameObject::StateGameObject(ObjectMovement movement, int layer, string name
 {
 	counter = 0.0f;
 	forceMultiplier = 1.0f;
-	grid = NavigationGrid("LevelTwoMaze.txt");
 	switch (movement)
 	{
 	case(ObjectMovement::MOVING):
@@ -54,11 +53,10 @@ void StateGameObject::OnCollisionEnd(GameObject* otherObject)
 }
 float StateGameObject::DistanceFromObject(GameObject* otherObject)
 {
-	// May wanna change this function to return path length not just direct line length
-
 	Vector3 pos = this->GetTransform().GetPosition();
 	Vector3 otherObjectPos = otherObject->GetTransform().GetPosition();
-	return abs((otherObjectPos - pos).Length());
+	Pathfind(pos, otherObjectPos);
+	return nodes.size();
 }
 
 void StateGameObject::InitMoving()
@@ -174,6 +172,9 @@ void StateGameObject::InitAI()
 		});
 	State* wander = new State([&](float dt)->void
 		{
+			int x = ((rand() % 15) + 1) * 25;
+			int z = ((rand() % 15) + 1) * 25;
+			wanderDestination = Vector3(x, 5, z);
 			this->Wander(dt);
 		});
 	State* goForPowerUp = new State([&](float dt)->void
@@ -209,17 +210,17 @@ void StateGameObject::InitAI()
 		}));
 	stateMachine->AddTransition(new StateTransition(huntPlayer, wander, [&](void)->bool
 		{
-			return DistanceFromObject(playerBall) > 150.0f;
+			return DistanceFromObject(playerBall) > 100;
 		}));
 	stateMachine->AddTransition(new StateTransition(wander, huntPlayer, [&](void)->bool
 		{
-			return DistanceFromObject(playerBall) < 150.0f;
+			return DistanceFromObject(playerBall) < 100;
 		}));
 	stateMachine->AddTransition(new StateTransition(goForPowerUp, wander, [&](void)->bool
 		{
 			for (PowerUpObject* p : powerUps)
 			{
-				if (DistanceFromObject(p) > 150.0f)
+				if (DistanceFromObject(p) > 15)
 				{
 					return true;
 				}
@@ -230,7 +231,7 @@ void StateGameObject::InitAI()
 		{
 			for (PowerUpObject* p : powerUps)
 			{
-				if (DistanceFromObject(p) > 150.0f)
+				if (DistanceFromObject(p) > 15)
 				{
 					return false;
 				}
@@ -282,15 +283,17 @@ void StateGameObject::Inactive()
 
 void StateGameObject::Hunt(float dt, int huntingTarget)
 {
-	Vector3 startPos;
+	Vector3 startPos = this->GetTransform().GetPosition();
 	Vector3 endPos;
 	if (huntingTarget == 1)
 	{ // Player
 		endPos = playerBall->GetTransform().GetPosition();
+		this->SetState(States::HUNTING_PLAYER);
 	}
 	else if (huntingTarget == 2)
 	{ // PowerUp
 		float distance = FLT_MAX;
+		this->SetState(States::HUNTING_POWER_UP);
 		for (PowerUpObject* p : powerUps)
 		{
 			Vector3 powerUpPos = p->GetTransform().GetPosition();
@@ -301,12 +304,58 @@ void StateGameObject::Hunt(float dt, int huntingTarget)
 		}
 	}
 
-	startPos.y = 0;
-	endPos.y = 0;
+	endPos.y = 5;
+	startPos.y = 5;
 
+	Vector3 direction;
+	bool path = Pathfind(startPos, endPos);
+	if (path && nodes.size() > 2)
+	{
+		//Vector3 direction = nodes[1] - startPos;
+		direction = (abs((nodes[1] - startPos).Length() > 5.0f)) ? nodes[1] - startPos : nodes[2] - startPos;
+		//Vector3 direction = (abs((nodes[0] - startPos).Length() > 12.5f)) ? nodes[0] - startPos : nodes[1] - startPos;
+		//GetPhysicsObject()->AddForce(direction * 0.25f);
+
+
+		Debug::DrawLine(startPos, nodes[1], Vector4(0, 1, 0, 1));
+		for (int i = 2; i < nodes.size(); ++i)
+		{
+			Vector3 a = nodes[i - 1];
+			Vector3 b = nodes[i];
+
+			Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
+		}
+	}
+	else if (path)
+	{
+		direction = (nodes.size() > 0) ? nodes[1] - startPos : nodes[0] - startPos;
+	}
+	else
+	{
+		direction = (endPos - startPos) * 0.1f;
+	}
+	GetPhysicsObject()->ApplyLinearImpulse(direction * 0.001f);
+}
+void StateGameObject::Wander(float dt) 
+{
+	this->SetState(States::WANDERING);
+
+	Vector3 startPos = this->GetTransform().GetPosition();
+	if (Pathfind(startPos, wanderDestination) && nodes.size() > 1)
+	{
+		Vector3 direction = nodes[1] - startPos;
+		//Vector3 direction = (abs((nodes[1] - startPos).Length() > 5.0f)) ? nodes[1] - startPos : nodes[2] - startPos;
+		//GetPhysicsObject()->AddForce(direction * 0.25f);
+		GetPhysicsObject()->ApplyLinearImpulse(direction * 0.01f);
+	}
+}
+
+bool StateGameObject::Pathfind(const Vector3& startPos, const Vector3& endPos)
+{
+	nodes.clear();
 	NavigationPath outPath;
-	vector<Vector3> nodes;
 
+	NavigationGrid grid("LevelTwoMaze.txt");
 	bool found = grid.FindPath(startPos, endPos, outPath);
 
 	Vector3 pos;
@@ -314,12 +363,5 @@ void StateGameObject::Hunt(float dt, int huntingTarget)
 	{
 		nodes.push_back(pos);
 	}
-
-	Vector3 a = nodes[0];
-	Vector3 b = nodes[1];
-
-	Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
-}
-void StateGameObject::Wander(float dt) {
-
+	return found;
 }

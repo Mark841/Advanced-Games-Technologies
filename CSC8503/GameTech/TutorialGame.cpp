@@ -29,6 +29,7 @@ TutorialGame::TutorialGame(int level)	{
 	playerCanMoveBall = false;
 	speedPowerUpActive = false;
 	speedPowerUpTimer = 0.0f;
+	reset = false;
 
 	Debug::SetRenderer(renderer);
 
@@ -92,7 +93,7 @@ void TutorialGame::UpdateGame(float dt) {
 		{
 			playerBall->GetTransform().SetPosition(respawnPoint);
 		}
-		if (speedPowerUpActive == false && speedPowerUpTimer > 15.0f)
+		if (speedPowerUpActive == false && speedPowerUpTimer > 150.0f)
 		{
 			PowerUpObject* powerUp = (rand() % 2) ? AddPowerUpObjectToWorld(0, "POWER UP", Vector3(125, 5, 75), 0.0f, PowerUp::SPEED_UP) : AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-50, 5, 75), 0.0f, PowerUp::SPEED_UP);
 			powerUps.emplace_back(powerUp); 
@@ -109,6 +110,7 @@ void TutorialGame::UpdateGame(float dt) {
 		{
 			e->UpdatePlayerPos(playerBall);
 			e->UpdatePowerUps(powerUps);
+			reset =  (e->EliminatedPlayer()) ? true : false;
 		}
 		for (PowerUpObject* p : powerUps)
 		{
@@ -199,6 +201,13 @@ void TutorialGame::UpdateGame(float dt) {
 
 	Debug::FlushRenderables(dt);
 	renderer->Render();
+
+	if (reset)
+	{
+		InitWorld(); //We can reset the simulation at any time with F1
+		selectionObject = nullptr;
+		lockedObject = nullptr;
+	}
 }
 
 void TutorialGame::UpdateKeys() {
@@ -340,7 +349,14 @@ void TutorialGame::InitCamera() {
 	world->GetMainCamera()->SetFarPlane(500.0f);
 	world->GetMainCamera()->SetPitch(-15.0f);
 	world->GetMainCamera()->SetYaw(315.0f);
-	world->GetMainCamera()->SetPosition(Vector3(-200, 40, 200));
+	if (level == 1)
+	{
+		world->GetMainCamera()->SetPosition(Vector3(-200, 40, 200));
+	}
+	if (level == 2)
+	{
+		world->GetMainCamera()->SetPosition(Vector3(-100, 325, 500));
+	}
 	lockedObject = nullptr;
 }
 
@@ -403,9 +419,12 @@ void TutorialGame::InitWorld2() {
 	physics->Clear();
 	checkpoints.clear();
 	powerUps.clear();
+	enemies.clear();
+	speedPowerUpActive = false;
+	speedPowerUpTimer = 0.0f;
+	InitCamera();
 	Vector3 mapCentre = Vector3(200, 0, 200);
-
-	world->GetMainCamera()->SetPosition(mapCentre + Vector3(-300, 325, 300));
+	
 	InitLevelTwoMap(mapCentre);
 	checkpoints.emplace_back(AddCheckpointToWorld(mapCentre + Vector3(-150, 2, 25), Vector3(1, 1, 25)));
 
@@ -428,7 +447,7 @@ void TutorialGame::DrawTextDebugs()
 {
 	if (paused)
 	{
-		Debug::Print("PRESS U TO UNPAUSE", Vector2(35, 50));
+		Debug::Print("PRESS P TO UNPAUSE", Vector2(35, 50));
 	}
 	else if (finished)
 	{
