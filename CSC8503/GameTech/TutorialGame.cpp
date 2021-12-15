@@ -30,6 +30,7 @@ TutorialGame::TutorialGame(int level)	{
 	speedPowerUpActive = false;
 	speedPowerUpTimer = 0.0f;
 	reset = false;
+	mapCentre = Vector3(0, 0, 0);
 
 	Debug::SetRenderer(renderer);
 
@@ -85,23 +86,27 @@ void TutorialGame::UpdateGame(float dt) {
 	Debug::SetRenderer(renderer); 
 	if (level != 0)
 	{
-		if (finish != nullptr && finish->GetTriggered())
+		if (finish != nullptr && finish->GetTriggeredBy() != nullptr && finish->GetTriggeredBy()->GetName() == "PLAYER BALL")
 		{
 			finished = true;
 		}
-		if (killPlane != nullptr && killPlane->GetTriggered())
+		if (killPlane != nullptr && killPlane->GetTriggeredBy() != nullptr && killPlane->GetTriggeredBy()->GetName() == "PLAYER BALL")
 		{
 			playerBall->GetTransform().SetPosition(respawnPoint);
 		}
-		if (speedPowerUpActive == false && speedPowerUpTimer > 150.0f)
+		if (killPlane != nullptr && killPlane->GetTriggeredBy() != nullptr && killPlane->GetTriggeredBy()->GetName() == "STATE SPHERE")
 		{
-			PowerUpObject* powerUp = (rand() % 2) ? AddPowerUpObjectToWorld(0, "POWER UP", Vector3(125, 5, 75), 0.0f, PowerUp::SPEED_UP) : AddPowerUpObjectToWorld(0, "POWER UP", Vector3(-50, 5, 75), 0.0f, PowerUp::SPEED_UP);
+			killPlane->GetTriggeredBy()->GetTransform().SetPosition(mapCentre + Vector3(150, 15, -150));
+		}
+		if (speedPowerUpActive == false && speedPowerUpTimer > 15.0f)
+		{
+			PowerUpObject* powerUp = (rand() % 2) ? AddPowerUpObjectToWorld(0, "POWER UP", mapCentre + Vector3(125, 5, 75), 0.0f, PowerUp::SPEED_UP) : AddPowerUpObjectToWorld(0, "POWER UP", mapCentre + Vector3(150, 5, 75), 0.0f, PowerUp::SPEED_UP);
 			powerUps.emplace_back(powerUp); 
 			speedPowerUpActive = true;
 		}
 		for (DestinationObject* d : checkpoints)
 		{
-			if (d != nullptr && d->GetTriggered())
+			if (d != nullptr && d->GetTriggeredBy() != nullptr && d->GetTriggeredBy()->GetName() == "PLAYER BALL")
 			{
 				respawnPoint = d->GetTransform().GetPosition() + Vector3(25, 15, 0);
 			}
@@ -114,7 +119,7 @@ void TutorialGame::UpdateGame(float dt) {
 		}
 		for (PowerUpObject* p : powerUps)
 		{
-			if (p != nullptr && p->GetTriggered())
+			if (p != nullptr && p->GetTriggeredBy() != nullptr && p->GetTriggeredBy()->GetName() == "PLAYER BALL")
 			{
 				if (p->GetAbility() == PowerUp::INCREASE_FRICTION)
 				{
@@ -140,22 +145,32 @@ void TutorialGame::UpdateGame(float dt) {
 					world->RemoveGameObject(p);
 				}
 				if (p->GetAbility() == PowerUp::SPEED_UP)
-				{
-					for (StateGameObject* e : enemies)
-					{
-						if (abs((p->GetTransform().GetPosition() - e->GetTransform().GetPosition()).Length()) < 10.0f)
-						{
-							e->AddToForceMultiplier(0.5f);
-						}
-					}
-					if (abs((p->GetTransform().GetPosition() - playerBall->GetTransform().GetPosition()).Length()) < 10.0f)
-					{
-						playerBall->GetPhysicsObject()->SetLinearVelocity(playerBall->GetPhysicsObject()->GetLinearVelocity() * 3);
-						playerBall->GetPhysicsObject()->SetAngularVelocity(playerBall->GetPhysicsObject()->GetAngularVelocity() * 3);
-					}
+				{ // Acts as a boost for the player
+					playerBall->GetPhysicsObject()->SetLinearVelocity(playerBall->GetPhysicsObject()->GetLinearVelocity() * 3);
+					playerBall->GetPhysicsObject()->SetAngularVelocity(playerBall->GetPhysicsObject()->GetAngularVelocity() * 3);
+
 					speedPowerUpActive = false;
 					speedPowerUpTimer = 0.0f;
 					world->RemoveGameObject(p);
+				}
+				powerUps.erase(std::remove(powerUps.begin(), powerUps.end(), p), powerUps.end());
+			}
+			if (p != nullptr && p->GetTriggeredBy() != nullptr && p->GetTriggeredBy()->GetName() == "STATE SPHERE")
+			{
+				if (p->GetAbility() == PowerUp::SPEED_UP)
+				{
+					for (StateGameObject* e : enemies)
+					{ // find which enemy object picked it up
+						if (abs((p->GetTransform().GetPosition() - e->GetTransform().GetPosition()).Length()) < 10.0f)
+						{ // multiply the enemies speed by an amount, can be stacked
+							std::cout << "PICKED UP" << std::endl;
+							e->AddToForceMultiplier(1.0f);
+
+							speedPowerUpActive = false;
+							speedPowerUpTimer = 0.0f;
+							world->RemoveGameObject(p);
+						}
+					}
 				}
 				powerUps.erase(std::remove(powerUps.begin(), powerUps.end(), p), powerUps.end());
 			}
@@ -423,7 +438,7 @@ void TutorialGame::InitWorld2() {
 	speedPowerUpActive = false;
 	speedPowerUpTimer = 0.0f;
 	InitCamera();
-	Vector3 mapCentre = Vector3(200, 0, 200);
+	mapCentre = Vector3(200, 0, 200);
 	
 	InitLevelTwoMap(mapCentre);
 	checkpoints.emplace_back(AddCheckpointToWorld(mapCentre + Vector3(-150, 2, 25), Vector3(1, 1, 25)));
@@ -810,21 +825,21 @@ void TutorialGame::AddMazeWalls(const Vector3& centre)
 	AddWallToWorld(centre + Vector3(0, 5, 125), Vector3(1, 10, 25));
 	AddWallToWorld(centre + Vector3(50, 5, 150), Vector3(1, 10, 50));
 }
-void TutorialGame::AddFunnel(const Vector3& holeCentre, int heightAboveFloor)
+void TutorialGame::AddFunnel(const Vector3& holeCentre, float heightAboveFloor)
 {
 	AddAngledFloorToWorld(Vector3(holeCentre.x, heightAboveFloor, holeCentre.z - 15), Vector3(20, 2, 40), Vector3(80, 0, 0));
 	AddAngledFloorToWorld(Vector3(holeCentre.x, heightAboveFloor, holeCentre.z + 15), Vector3(20, 2, 40), Vector3(-80, 0, 0));
 	AddAngledFloorToWorld(Vector3(holeCentre.x + 15, heightAboveFloor, holeCentre.z), Vector3(40, 2, 20), Vector3(0, 0, 80));
 	AddAngledFloorToWorld(Vector3(holeCentre.x - 15, heightAboveFloor, holeCentre.z), Vector3(40, 2, 20), Vector3(0, 0, -80));
 }
-void TutorialGame::AddFunnelFloor(const Vector3& holeCentre, int heightAboveFloor)
+void TutorialGame::AddFunnelFloor(const Vector3& holeCentre, float heightAboveFloor)
 {
 	AddAngledFloorToWorld(Vector3(holeCentre.x, heightAboveFloor + 45, holeCentre.z - 60), Vector3(80, 2, 40), Vector3(10, 0, 0));
 	AddAngledFloorToWorld(Vector3(holeCentre.x, heightAboveFloor + 45, holeCentre.z + 60), Vector3(80, 2, 40), Vector3(-10, 0, 0));
 	AddAngledFloorToWorld(Vector3(holeCentre.x + 60, heightAboveFloor + 45, holeCentre.z), Vector3(40, 2, 80), Vector3(0, 0, 10));
 	AddAngledFloorToWorld(Vector3(holeCentre.x - 60, heightAboveFloor + 45, holeCentre.z), Vector3(40, 2, 80), Vector3(0, 0, -10));
 }
-void TutorialGame::AddFunnelFloorWithObstacles(const Vector3& holeCentre, int heightAboveFloor)
+void TutorialGame::AddFunnelFloorWithObstacles(const Vector3& holeCentre, float heightAboveFloor)
 {
 	AddFunnelFloor(holeCentre, heightAboveFloor);
 	// Capsules around centre

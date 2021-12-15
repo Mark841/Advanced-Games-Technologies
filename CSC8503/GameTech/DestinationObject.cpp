@@ -5,20 +5,20 @@ using namespace CSC8503;
 
 DestinationObject::DestinationObject(int layer, string name) : GameObject(layer, name) 
 {
-	triggered = false;
+	triggeredBy = nullptr;
 }
 
 void DestinationObject::OnCollisionBegin(GameObject* otherObject)
 {
-	if (otherObject->GetName() == "PLAYER BALL")
+	if (otherObject->GetName() == "PLAYER BALL" || otherObject->GetName() == "STATE SPHERE")
 	{
-		triggered = true;
+		triggeredBy = otherObject;
 	}
 }
 void DestinationObject::OnCollisionEnd(GameObject* otherObject)
 {
-	if (otherObject->GetName() == "PLAYER BALL")
+	if (otherObject->GetName() == "PLAYER BALL" || otherObject->GetName() == "STATE SPHERE")
 	{
-		triggered = false;
+		triggeredBy = nullptr;
 	}
 }

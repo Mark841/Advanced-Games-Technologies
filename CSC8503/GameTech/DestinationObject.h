@@ -18,13 +18,13 @@ namespace NCL
 			virtual void OnCollisionBegin(GameObject* otherObject);
 			virtual void OnCollisionEnd(GameObject* otherObject);
 
-			bool GetTriggered() const
+			GameObject* GetTriggeredBy() const
 			{
-				return triggered;
+				return triggeredBy;
 			}
 
 		protected:
-			bool triggered;
+			GameObject* triggeredBy;
 		};
 	}
 }

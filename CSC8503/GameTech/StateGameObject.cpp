@@ -51,7 +51,7 @@ void StateGameObject::OnCollisionEnd(GameObject* otherObject)
 		collisionWithPlayerBall = nullptr;
 	}
 }
-float StateGameObject::DistanceFromObject(GameObject* otherObject)
+int StateGameObject::DistanceToObject(GameObject* otherObject)
 {
 	Vector3 pos = this->GetTransform().GetPosition();
 	Vector3 otherObjectPos = otherObject->GetTransform().GetPosition();
@@ -168,17 +168,23 @@ void StateGameObject::InitAI()
 
 	State* huntPlayer = new State([&](float dt)->void
 		{
+			this->SetState(States::HUNTING_PLAYER);
 			this->Hunt(dt, 1);
 		});
 	State* wander = new State([&](float dt)->void
 		{
-			int x = ((rand() % 15) + 1) * 25;
-			int z = ((rand() % 15) + 1) * 25;
-			wanderDestination = Vector3(x, 5, z);
+			this->SetState(States::WANDERING);
+			if (wanderDestination == Vector3(-1,-1,-1))
+			{
+				int x = ((rand() % 15) + 1) * 25;
+				int z = ((rand() % 15) + 1) * 25;
+				wanderDestination = Vector3(x, 5, z);
+			}
 			this->Wander(dt);
 		});
 	State* goForPowerUp = new State([&](float dt)->void
 		{
+			this->SetState(States::HUNTING_POWER_UP);
 			this->Hunt(dt, 2);
 		});
 
@@ -190,7 +196,12 @@ void StateGameObject::InitAI()
 		{
 			for (PowerUpObject* p : powerUps)
 			{
-				if (p->GetAbility() == PowerUp::SPEED_UP && DistanceFromObject(playerBall) > DistanceFromObject(p))
+				if (p->GetAbility() != PowerUp::SPEED_UP)
+				{
+					continue;
+				}
+				int distToPlayer = DistanceToObject(playerBall);
+				if (DistanceToObject(p) < distToPlayer || distToPlayer == 0)
 				{
 					return true;
 				}
@@ -201,7 +212,12 @@ void StateGameObject::InitAI()
 		{
 			for (PowerUpObject* p : powerUps)
 			{
-				if (p->GetAbility() == PowerUp::SPEED_UP && DistanceFromObject(playerBall) > DistanceFromObject(p))
+				if (p->GetAbility() != PowerUp::SPEED_UP)
+				{
+					continue;
+				}
+				int distToPlayer = DistanceToObject(playerBall);
+				if (DistanceToObject(p) < distToPlayer && distToPlayer != 0)
 				{
 					return false;
 				}
@@ -210,17 +226,28 @@ void StateGameObject::InitAI()
 		}));
 	stateMachine->AddTransition(new StateTransition(huntPlayer, wander, [&](void)->bool
 		{
-			return DistanceFromObject(playerBall) > 100;
+			int distToPlayer = DistanceToObject(playerBall);
+			return distToPlayer > 20 || distToPlayer == 0;
 		}));
 	stateMachine->AddTransition(new StateTransition(wander, huntPlayer, [&](void)->bool
 		{
-			return DistanceFromObject(playerBall) < 100;
+			int distToPlayer = DistanceToObject(playerBall);
+			if (distToPlayer < 20 && distToPlayer > 0)
+			{
+				wanderDestination = Vector3(-1, -1, -1);
+				return true;
+			}
+			return false;
 		}));
 	stateMachine->AddTransition(new StateTransition(goForPowerUp, wander, [&](void)->bool
 		{
 			for (PowerUpObject* p : powerUps)
 			{
-				if (DistanceFromObject(p) > 15)
+				if (p->GetAbility() != PowerUp::SPEED_UP)
+				{
+					continue;
+				}
+				if (DistanceToObject(p) > 30)
 				{
 					return true;
 				}
@@ -231,9 +258,14 @@ void StateGameObject::InitAI()
 		{
 			for (PowerUpObject* p : powerUps)
 			{
-				if (DistanceFromObject(p) > 15)
+				if (p->GetAbility() != PowerUp::SPEED_UP)
 				{
-					return false;
+					continue;
+				}
+				if (DistanceToObject(p) < 30)
+				{
+					wanderDestination = Vector3(-1, -1, -1);
+					return true;
 				}
 			}
 			return false;
@@ -288,35 +320,32 @@ void StateGameObject::Hunt(float dt, int huntingTarget)
 	if (huntingTarget == 1)
 	{ // Player
 		endPos = playerBall->GetTransform().GetPosition();
-		this->SetState(States::HUNTING_PLAYER);
 	}
 	else if (huntingTarget == 2)
 	{ // PowerUp
 		float distance = FLT_MAX;
-		this->SetState(States::HUNTING_POWER_UP);
 		for (PowerUpObject* p : powerUps)
 		{
-			Vector3 powerUpPos = p->GetTransform().GetPosition();
-			if (abs((this->GetTransform().GetPosition() - powerUpPos).Length()) < distance)
-			{// if this power up distance is less than the last
-				endPos = powerUpPos;
+			if (p->GetAbility() == PowerUp::SPEED_UP)
+			{
+				Vector3 powerUpPos = p->GetTransform().GetPosition();
+				if (abs((this->GetTransform().GetPosition() - powerUpPos).Length()) < distance)
+				{// if this power up distance is less than the last
+					endPos = powerUpPos;
+				}
 			}
 		}
 	}
 
 	endPos.y = 5;
-	startPos.y = 5;
 
 	Vector3 direction;
 	bool path = Pathfind(startPos, endPos);
 	if (path && nodes.size() > 2)
 	{
-		//Vector3 direction = nodes[1] - startPos;
 		direction = (abs((nodes[1] - startPos).Length() > 5.0f)) ? nodes[1] - startPos : nodes[2] - startPos;
-		//Vector3 direction = (abs((nodes[0] - startPos).Length() > 12.5f)) ? nodes[0] - startPos : nodes[1] - startPos;
-		//GetPhysicsObject()->AddForce(direction * 0.25f);
 
-
+		////////////////////////////////////////////////////////////////////////
 		Debug::DrawLine(startPos, nodes[1], Vector4(0, 1, 0, 1));
 		for (int i = 2; i < nodes.size(); ++i)
 		{
@@ -325,28 +354,43 @@ void StateGameObject::Hunt(float dt, int huntingTarget)
 
 			Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
 		}
+		////////////////////////////////////////////////////////////////////////
 	}
 	else if (path)
 	{
-		direction = (nodes.size() > 0) ? nodes[1] - startPos : nodes[0] - startPos;
+		direction = (nodes.size() > 1) ? nodes[1] - startPos : nodes[0] - startPos;
 	}
 	else
 	{
 		direction = (endPos - startPos) * 0.1f;
 	}
+	direction *= forceMultiplier;
 	GetPhysicsObject()->ApplyLinearImpulse(direction * 0.001f);
 }
 void StateGameObject::Wander(float dt) 
 {
-	this->SetState(States::WANDERING);
-
 	Vector3 startPos = this->GetTransform().GetPosition();
-	if (Pathfind(startPos, wanderDestination) && nodes.size() > 1)
+	bool path = Pathfind(startPos, wanderDestination);
+	if (path && nodes.size() > 2)
 	{
-		Vector3 direction = nodes[1] - startPos;
-		//Vector3 direction = (abs((nodes[1] - startPos).Length() > 5.0f)) ? nodes[1] - startPos : nodes[2] - startPos;
-		//GetPhysicsObject()->AddForce(direction * 0.25f);
-		GetPhysicsObject()->ApplyLinearImpulse(direction * 0.01f);
+		Vector3 direction = (abs((nodes[1] - startPos).Length() > 5.0f)) ? nodes[1] - startPos : nodes[2] - startPos;
+		direction *= forceMultiplier;
+		GetPhysicsObject()->ApplyLinearImpulse(direction * 0.001f);
+
+		////////////////////////////////////////////////////////////////////////
+		Debug::DrawLine(startPos, nodes[1], Vector4(0, 1, 0, 1));
+		for (int i = 2; i < nodes.size(); ++i)
+		{
+			Vector3 a = nodes[i - 1];
+			Vector3 b = nodes[i];
+
+			Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
+		}
+		////////////////////////////////////////////////////////////////////////
+	}
+	if (path && nodes.size() < 2)
+	{ // Get a new path
+		wanderDestination = Vector3(-1, -1, -1);
 	}
 }
 

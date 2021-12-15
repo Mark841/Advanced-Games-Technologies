@@ -27,7 +27,7 @@ namespace NCL
 			virtual void OnCollisionBegin(GameObject* otherObject);
 			virtual void OnCollisionEnd(GameObject* otherObject);
 
-			float DistanceFromObject(GameObject* otherObject);
+			int DistanceToObject(GameObject* otherObject);
 
 			void AddToForceMultiplier(float multiplier) { forceMultiplier += multiplier; }
 			void UpdatePowerUps(std::vector<PowerUpObject*> powerUps) { this->powerUps = powerUps; }

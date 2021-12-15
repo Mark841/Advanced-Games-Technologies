@@ -61,9 +61,9 @@ namespace NCL {
 			void AddMazeFloor(const Vector3& centre);
 			void AddMazeWalls(const Vector3& centre);
 
-			void AddFunnel(const Vector3& holeCentre, int heightAboveFloor);
-			void AddFunnelFloor(const Vector3& holeCentre, int heightAboveFloor);
-			void AddFunnelFloorWithObstacles(const Vector3& holeCentre, int heightAboveFloor);
+			void AddFunnel(const Vector3& holeCentre, float heightAboveFloor);
+			void AddFunnelFloor(const Vector3& holeCentre, float heightAboveFloor);
+			void AddFunnelFloorWithObstacles(const Vector3& holeCentre, float heightAboveFloor);
 
 			void AddWallSeperators(const Vector3& centre);
 			GameObject* AddWallToWorld(const Vector3& position, const Vector3& size);
@@ -116,6 +116,7 @@ namespace NCL {
 			bool reset;
 			float totalTime;
 			Vector3 respawnPoint;
+			Vector3 mapCentre;
 			Vector4 moveableObjectColour = Vector4(0.5f, 1, 0.5f, 1);
 			Vector4 pickupObjectColour = Vector4(0.5f, 1, 1, 1);
 			Vector4 checkpointColour = Vector4(1, 0.5f, 0.5f, 1);
