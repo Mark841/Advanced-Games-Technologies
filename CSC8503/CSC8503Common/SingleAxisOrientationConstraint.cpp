@@ -8,88 +8,36 @@ void SingleAxisOrientationConstraint::UpdateConstraint(float dt)
 	Quaternion aRotation = objectA->GetTransform().GetOrientation();
 	Quaternion bRotation = objectB->GetTransform().GetOrientation();
 
+	float angleTo;
 	switch (axis)
 	{
 	case(Axis::PITCH): 
-		if (aRotation.ToEuler().x > angle)
-		{
-			objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(angle, 0, 0));
-		}
-		else if (aRotation.ToEuler().x < -angle)
-		{
-			objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(-angle, 0, 0));
-		}
-		else
-		{
-			objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(aRotation.ToEuler().x, 0, 0));
-		}
+		angleTo = (aRotation.ToEuler().x > angle) ? angle : aRotation.ToEuler().x;
+		angleTo = (aRotation.ToEuler().x < -angle) ? -angle : aRotation.ToEuler().x;
+		objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(angleTo, 0, 0));
 
-		if (bRotation.ToEuler().x > angle)
-		{
-			objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(angle, 0, 0));
-		}
-		else if (bRotation.ToEuler().x < -angle)
-		{
-			objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(-angle, 0, 0));
-		}
-		else
-		{
-			objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(bRotation.ToEuler().x, 0, 0));
-		}
+		angleTo = (bRotation.ToEuler().x > angle) ? angle : bRotation.ToEuler().x;
+		angleTo = (bRotation.ToEuler().x < -angle) ? -angle : bRotation.ToEuler().x;
+		objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(angleTo, 0, 0));
 		break;
-	case(Axis::YAW):
-		if (aRotation.ToEuler().y > angle)
-		{
-			objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, angle, 0));
-		}
-		else if (aRotation.ToEuler().y < -angle)
-		{
-			objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, -angle, 0));
-		}
-		else
-		{
-			objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, aRotation.ToEuler().y, 0));
-		}
 
-		if (bRotation.ToEuler().y > angle)
-		{
-			objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, angle, 0));
-		}
-		else if (bRotation.ToEuler().y < -angle)
-		{
-			objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, -angle, 0));
-		}
-		else
-		{
-			objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, bRotation.ToEuler().y, 0));
-		}
+	case(Axis::YAW):
+		angleTo = (aRotation.ToEuler().y > angle) ? angle : aRotation.ToEuler().y;
+		angleTo = (aRotation.ToEuler().y < -angle) ? -angle : aRotation.ToEuler().y;
+		objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, angleTo, 0));
+
+		angleTo = (bRotation.ToEuler().y > angle) ? angle : bRotation.ToEuler().y;
+		angleTo = (bRotation.ToEuler().y < -angle) ? -angle : bRotation.ToEuler().y;
+		objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, angleTo, 0));
 		break;
 	case(Axis::ROLL):
-		if (aRotation.ToEuler().z > angle)
-		{
-			objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, 0, angle));
-		}
-		else if (aRotation.ToEuler().z < -angle)
-		{
-			objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, 0, -angle));
-		}
-		else
-		{
-			objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, 0, aRotation.ToEuler().z));
-		}
+		angleTo = (aRotation.ToEuler().z > angle) ? angle : aRotation.ToEuler().z;
+		angleTo = (aRotation.ToEuler().z < -angle) ? -angle : aRotation.ToEuler().z;
+		objectA->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, 0, angleTo));
 
-		if (bRotation.ToEuler().z > angle)
-		{
-			objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, 0, angle));
-		}
-		else if (bRotation.ToEuler().z < -angle)
-		{
-			objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, 0, -angle));
-		}
-		else
-		{
-			objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, 0, bRotation.ToEuler().z));
-		}
+		angleTo = (bRotation.ToEuler().z > angle) ? angle : bRotation.ToEuler().z;
+		angleTo = (bRotation.ToEuler().z < -angle) ? -angle : bRotation.ToEuler().z;
+		objectB->GetTransform().SetOrientation(Quaternion::EulerAnglesToQuaternion(0, 0, angleTo));
 		break;
 	}
 

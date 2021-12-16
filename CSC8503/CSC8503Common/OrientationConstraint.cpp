@@ -7,7 +7,7 @@ void OrientationConstraint::UpdateConstraint(float dt)
 {
 	Quaternion aRotation = objectA->GetTransform().GetOrientation();
 	Quaternion bRotation = objectB->GetTransform().GetOrientation();
-
+	
 	//Vector3 offset = Vector3(angle, angle, angle) - (bRotation.ToEuler() - aRotation.ToEuler());
 	Vector3 offset = (bRotation.ToEuler() - aRotation.ToEuler());
 

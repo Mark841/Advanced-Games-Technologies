@@ -39,8 +39,7 @@ namespace NCL {
 			void InitLevelOneMap(const Vector3& centre);
 			void InitLevelTwoMap(const Vector3& centre);
 
-			void XAxisBridgeConstraint(const Vector3& position);
-			void ZAxisBridgeConstraint(const Vector3& position);
+			void XAxisBridgeConstraint(const Vector3& position, int length);
 			void ZAxisBridgeConstraint(const Vector3& position, int length);
 			GameObject* AttachableRopeConstraint(const Vector3& topPosition, int length);
 	

@@ -116,7 +116,10 @@ void TutorialGame::UpdateGame(float dt) {
 		{
 			e->UpdatePlayerPos(playerBall);
 			e->UpdatePowerUps(powerUps);
-			reset =  (e->EliminatedPlayer()) ? true : false;
+			if (!reset)
+			{
+				reset = (e->EliminatedPlayer()) ? true : false;
+			}
 		}
 		for (PowerUpObject* p : powerUps)
 		{
@@ -220,12 +223,11 @@ void TutorialGame::UpdateGame(float dt) {
 
 	if (reset)
 	{
-		InitWorld(); //We can reset the simulation at any time with F1
+		InitWorld();
 		selectionObject = nullptr;
 		lockedObject = nullptr;
 	}
 }
-
 void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F1)) {
 		InitWorld(); //We can reset the simulation at any time with F1
@@ -437,8 +439,13 @@ void TutorialGame::InitWorld1() {
 	
 	ZAxisBridgeConstraint(Vector3(50, -2, -100), 100);
 
-	AddSpringPusherXAxis(0, Vector3(-200, 5, -150), Vector3(5, 10, 50), 0.0f, 12.5f, 0.2f);
 	AddSpringPusherZAxis(0, Vector3(-150, 5, 165), Vector3(15, 8, 2), 0.0f, 12.5f, 0.2f);
+	AddSpringPusherXAxis(0, Vector3(-200, 5, -150), Vector3(5, 10, 50), 0.0f, 12.5f, 0.2f);
+	AddSpringPusherXAxis(0, Vector3(-100, 5, 150), Vector3(5, 10, 50), 0.0f, 12.5f, 0.2f);
+	AddSpringPusherXAxis(0, Vector3(0, 5, -150), Vector3(5, 10, 50), 0.0f, 12.5f, 0.2f);
+	AddSpringPusherZAxis(0, Vector3(-50, 5, -200), Vector3(50, 10, 5), 0.0f, 12.5f, 0.2f);
+	AddSpringPusherZAxis(0, Vector3(50, 5, 200), Vector3(50, 10, 5), 0.0f, 12.5f, 0.2f);
+	AddSpringPusherZAxis(0, Vector3(150, 5, -200), Vector3(50, 10, 5), 0.0f, 12.5f, 0.2f);
 
 	useGravity = true; //Toggle gravity!
 	physics->UseGravity(useGravity);
@@ -503,11 +510,11 @@ void TutorialGame::DrawTextDebugs()
 	}
 }
 
-void TutorialGame::XAxisBridgeConstraint(const Vector3& position) {
-	Vector3 cubeSize = Vector3(8, 4, 8);
+void TutorialGame::XAxisBridgeConstraint(const Vector3& position, int length) {
+	Vector3 cubeSize = Vector3(5, 2, 30);
 
 	float invCubeMass = 50; // how heavy the middle pieces are
-	int numLinks = 10;
+	int numLinks = length / 5.5f;
 	float maxDistance = 22; // constraint distance
 	float maxAngle = 45; // constraint rotation
 	float cubeDistance = 20; // distance between links
@@ -525,38 +532,6 @@ void TutorialGame::XAxisBridgeConstraint(const Vector3& position) {
 		block->GetRenderObject()->SetColour(moveableObjectColour);
 		PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
 		SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::PITCH);
-		//OrientationConstraint* orientConstraint = new OrientationConstraint(previous, block, maxAngle);
-
-		world->AddConstraint(posConstraint);
-		world->AddConstraint(orientConstraint);
-		previous = block;
-	}
-	PositionConstraint* constraint = new PositionConstraint(previous, end, maxDistance);
-	world->AddConstraint(constraint);
-}
-void TutorialGame::ZAxisBridgeConstraint(const Vector3& position) {
-	Vector3 cubeSize = Vector3(16, 2, 5);
-
-	float invCubeMass = 50; // how heavy the middle pieces are
-	int numLinks = 10;
-	float maxDistance = 11; // constraint distance
-	float maxAngle = 45; // constraint rotation
-	float cubeDistance = 10; // distance between links
-
-	Vector3 startPos = position;
-
-	GameObject* start = AddAABBCubeToWorld(0, startPos + Vector3(0, 0, 0), cubeSize, 0);
-	GameObject* end = AddAABBCubeToWorld(0, startPos + Vector3(0, 0, (numLinks + 2) * cubeDistance), cubeSize, 0);
-
-	GameObject* previous = start;
-
-	for (int i = 0; i < numLinks; ++i)
-	{
-		GameObject* block = AddOBBCubeToWorld(2, startPos + Vector3(0, 0, (i + 1) * cubeDistance), cubeSize, invCubeMass, true, moveableObjectColour);
-		block->GetRenderObject()->SetColour(moveableObjectColour);
-		PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
-		SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::ROLL);
-		//OrientationConstraint* orientConstraint = new OrientationConstraint(previous, block, maxAngle);
 
 		world->AddConstraint(posConstraint);
 		world->AddConstraint(orientConstraint);
@@ -587,7 +562,6 @@ void TutorialGame::ZAxisBridgeConstraint(const Vector3& position, int length) {
 		block->GetRenderObject()->SetColour(moveableObjectColour);
 		PositionConstraint* posConstraint = new PositionConstraint(previous, block, maxDistance);
 		SingleAxisOrientationConstraint* orientConstraint = new SingleAxisOrientationConstraint(previous, block, maxAngle, Axis::ROLL);
-		//OrientationConstraint* orientConstraint = new OrientationConstraint(previous, block, maxAngle);
 
 		world->AddConstraint(posConstraint);
 		world->AddConstraint(orientConstraint);
@@ -1431,7 +1405,7 @@ void TutorialGame::AddBallPusherZAxis(int layer, const Vector3& position)
 
 void TutorialGame::AddSpringPusherXAxis(int layer, const Vector3& origin, const Vector3& size, float length, float snappiness, float damping)
 {
-	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 0.0f, true, moveableObjectColour, "SPRING BLOCK");
+	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 0.0f, true, moveableObjectColour, "SPRING BLOCK X");
 	block->GetRenderObject()->SetColour(moveableObjectColour);
 	block->GetPhysicsObject()->SetAppliesGravity(false);
 
@@ -1444,7 +1418,7 @@ void TutorialGame::AddSpringPusherXAxis(int layer, const Vector3& origin, const 
 }
 void TutorialGame::AddSpringPusherZAxis(int layer, const Vector3& origin, const Vector3& size, float length, float snappiness, float damping)
 {
-	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 0.0f, true, moveableObjectColour, "SPRING BLOCK");
+	GameObject* block = AddOBBCubeToWorld(layer, origin, size, 0.0f, true, moveableObjectColour, "SPRING BLOCK Z");
 	block->GetRenderObject()->SetColour(moveableObjectColour);
 	block->GetPhysicsObject()->SetAppliesGravity(false);
 
@@ -1658,16 +1632,13 @@ void TutorialGame::MoveSelectedObject() {
 		{
 			if (closestCollision.node == selectionObject)
 			{
-				if (selectionObject->GetName() == "SPRING BLOCK")
+				if (selectionObject->GetName() == "SPRING BLOCK X")
 				{
-					if (abs(ray.GetDirection().x) > abs(ray.GetDirection().z))
-					{
-						selectionObject->GetPhysicsObject()->SetLinearVelocity(Vector3(forceMagnitude, 0, 0));
-					}
-					else
-					{
-						selectionObject->GetPhysicsObject()->SetLinearVelocity(Vector3(0, 0, forceMagnitude));
-					}
+					selectionObject->GetPhysicsObject()->SetLinearVelocity(Vector3(forceMagnitude, 0, 0));
+				}
+				else if (selectionObject->GetName() == "SPRING BLOCK Z")
+				{
+					selectionObject->GetPhysicsObject()->SetLinearVelocity(Vector3(0, 0, forceMagnitude));
 				}
 				else
 				{
