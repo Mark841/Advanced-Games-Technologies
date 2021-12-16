@@ -19,6 +19,10 @@ void DestinationObject::OnCollisionEnd(GameObject* otherObject)
 {
 	if (otherObject->GetName() == "PLAYER BALL" || otherObject->GetName() == "STATE SPHERE")
 	{
+		if (otherObject->GetName() == "PLAYER BALL" && this->GetName() == "KILL PLANE")
+		{
+			otherObject->DecrementLives();
+		}
 		triggeredBy = nullptr;
 	}
 }

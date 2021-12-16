@@ -93,7 +93,6 @@ void TutorialGame::UpdateGame(float dt) {
 		}
 		if (killPlane != nullptr && killPlane->GetTriggeredBy() != nullptr && killPlane->GetTriggeredBy()->GetName() == "PLAYER BALL")
 		{
-			playerBall->DecrementLives();
 			playerBall->GetTransform().SetPosition(respawnPoint);
 		}
 		if (killPlane != nullptr && killPlane->GetTriggeredBy() != nullptr && killPlane->GetTriggeredBy()->GetName() == "STATE SPHERE")
