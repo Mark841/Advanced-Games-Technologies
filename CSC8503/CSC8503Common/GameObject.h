@@ -147,6 +147,18 @@ namespace NCL {
 			{
 				return layer;
 			}
+			void IncrementLives()
+			{
+				lives++;
+			}
+			void DecrementLives()
+			{
+				lives--;
+			}
+			int GetLives() const
+			{
+				return lives;
+			}
 
 		protected:
 			Transform			transform;
@@ -158,6 +170,7 @@ namespace NCL {
 			bool	isActive;
 			int		worldID;
 			int layer;
+			int lives;
 			bool playerMoveable;
 			string	name;
 			States state;

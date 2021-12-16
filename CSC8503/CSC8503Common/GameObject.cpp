@@ -14,6 +14,7 @@ GameObject::GameObject(int layer, string objectName, States state, Vector4 baseC
 	this->state = state;
 	this->baseColour = baseColour;
 	this->playerMoveable = moveable;
+	lives = 3;
 
 	attachedSpring = attachSpring;
 	springLength = 0.0f;

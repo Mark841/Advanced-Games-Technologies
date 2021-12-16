@@ -25,6 +25,7 @@ namespace NCL {
 			void InitWorld();
 			void InitWorld1();
 			void InitWorld2();
+			void InitWorld3();
 			void DrawTextDebugs();
 
 			void InitGameExamples();
@@ -32,6 +33,7 @@ namespace NCL {
 			void InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius);
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
+			void InitCapsuleGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitDefaultFloor();
 
 			void InitLevelOneMap(const Vector3& centre);
@@ -147,7 +149,7 @@ namespace NCL {
 
 			//Coursework Additional functionality	
 			GameObject* lockedObject	= nullptr;
-			Vector3 lockedOffset		= Vector3(0, 14, 20);
+			Vector3 lockedOffset		= Vector3(0, 75, 100);
 			void LockCameraToObject(GameObject* o) {
 				lockedObject = o;
 			}

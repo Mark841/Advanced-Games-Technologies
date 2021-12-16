@@ -230,7 +230,7 @@ class Game1 : public PushdownState
 			*newState = new PauseScreen();
 			return PushdownResult::Push;
 		}
-		Debug::Print("PRESS ESCAPE TO RETURN TO MENU", Vector2(5, 80));
+		Debug::Print("PRESS ESCAPE TO RETURN TO MENU", Vector2(5, 95));
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE))
 		{
 			return PushdownResult::Pop;
@@ -256,7 +256,7 @@ class Game2 : public PushdownState
 			*newState = new PauseScreen();
 			return PushdownResult::Push;
 		}
-		Debug::Print("PRESS ESCAPE TO RETURN TO MENU", Vector2(5, 80));
+		Debug::Print("PRESS ESCAPE TO RETURN TO MENU", Vector2(5, 95));
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE))
 		{
 			return PushdownResult::Pop;
@@ -270,6 +270,32 @@ class Game2 : public PushdownState
 	}
 protected:
 	TutorialGame* g = new TutorialGame(2);
+};
+class Game3 : public PushdownState
+{
+	PushdownResult OnUpdate(float dt, PushdownState** newState) override
+	{
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::P))
+		{
+			g->SetPaused(true);
+			g->UpdateGame(dt);
+			*newState = new PauseScreen();
+			return PushdownResult::Push;
+		}
+		Debug::Print("PRESS ESCAPE TO RETURN TO MENU", Vector2(5, 95));
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE))
+		{
+			return PushdownResult::Pop;
+		}
+		g->UpdateGame(dt);
+		return PushdownResult::NoChange;
+	}
+	void OnAwake() override
+	{
+		g->SetPaused(false);
+	}
+protected:
+	TutorialGame* g = new TutorialGame(3);
 };
 class IntroScreen : public PushdownState
 {
@@ -288,7 +314,13 @@ class IntroScreen : public PushdownState
 			*newState = new Game2();
 			return PushdownResult::Push;
 		}
-		Debug::Print("PRESS ESCAPE TO EXIT", Vector2(30, 70));
+		Debug::Print("TEST LEVEL: (PRESS 3)", Vector2(30, 70));
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM3))
+		{
+			*newState = new Game3();
+			return PushdownResult::Push;
+		}
+		Debug::Print("PRESS ESCAPE TO EXIT", Vector2(30, 80));
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::ESCAPE))
 		{
 			return PushdownResult::Pop;

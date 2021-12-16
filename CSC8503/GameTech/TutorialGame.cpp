@@ -86,12 +86,14 @@ void TutorialGame::UpdateGame(float dt) {
 	Debug::SetRenderer(renderer); 
 	if (level != 0)
 	{
+		reset = (playerBall != nullptr && playerBall->GetLives() <= 0) ? true : false;
 		if (finish != nullptr && finish->GetTriggeredBy() != nullptr && finish->GetTriggeredBy()->GetName() == "PLAYER BALL")
 		{
 			finished = true;
 		}
 		if (killPlane != nullptr && killPlane->GetTriggeredBy() != nullptr && killPlane->GetTriggeredBy()->GetName() == "PLAYER BALL")
 		{
+			playerBall->DecrementLives();
 			playerBall->GetTransform().SetPosition(respawnPoint);
 		}
 		if (killPlane != nullptr && killPlane->GetTriggeredBy() != nullptr && killPlane->GetTriggeredBy()->GetName() == "STATE SPHERE")
@@ -298,7 +300,7 @@ void TutorialGame::LockedObjectMovement() {
 	Vector3 charForward  = lockedObject->GetTransform().GetOrientation() * Vector3(0, 0, 1);
 	Vector3 charForward2 = lockedObject->GetTransform().GetOrientation() * Vector3(0, 0, 1);
 
-	float force = 100.0f;
+	float force = 10.0f;
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
 		lockedObject->GetPhysicsObject()->AddForce(-rightAxis * force);
@@ -372,10 +374,31 @@ void TutorialGame::InitCamera() {
 	{
 		world->GetMainCamera()->SetPosition(Vector3(-100, 325, 500));
 	}
+	if (level == 3)
+	{
+		world->GetMainCamera()->SetPosition(Vector3(-25, 25, 50));
+	}
 	lockedObject = nullptr;
 }
 
 void TutorialGame::InitWorld() {
+	totalTime = 0.0f;
+	finished = false;
+	world->ClearAndErase();
+	physics->Clear();
+	checkpoints.clear();
+	powerUps.clear();
+	enemies.clear();
+	speedPowerUpActive = false;
+	speedPowerUpTimer = 0.0f;
+	playerBall = nullptr;
+	selectionObject = nullptr;
+	endPoint = nullptr;
+	attachedBallConstraint = nullptr;
+	finish = nullptr;
+	killPlane = nullptr;
+	InitCamera();
+
 	if (level == 0)
 	{
 		world->ClearAndErase();
@@ -389,15 +412,12 @@ void TutorialGame::InitWorld() {
 	{
 		InitWorld2();
 	}
+	if (level == 3)
+	{
+		InitWorld3();
+	}
 }
-void TutorialGame::InitWorld1() {
-	totalTime = 0.0f;
-	finished = false;
-	world->ClearAndErase();
-	physics->Clear();
-	checkpoints.clear();
-	powerUps.clear();
-		
+void TutorialGame::InitWorld1() {	
 	InitLevelOneMap(Vector3(0,0,0));
 
 	playerBall = AddPlayerBallToWorld(2, Vector3(-150, 5, 150), 4.0f);
@@ -425,16 +445,6 @@ void TutorialGame::InitWorld1() {
 	physics->UseGravity(useGravity);
 }
 void TutorialGame::InitWorld2() {
-	totalTime = 0.0f;
-	finished = false;
-	world->ClearAndErase();
-	physics->Clear();
-	checkpoints.clear();
-	powerUps.clear();
-	enemies.clear();
-	speedPowerUpActive = false;
-	speedPowerUpTimer = 0.0f;
-	InitCamera();
 	mapCentre = Vector3(200, 0, 200);
 	
 	InitLevelTwoMap(mapCentre);
@@ -455,32 +465,41 @@ void TutorialGame::InitWorld2() {
 	useGravity = true; //Toggle gravity!
 	physics->UseGravity(useGravity);
 }
+void TutorialGame::InitWorld3()
+{
+	InitCapsuleGridWorld(5, 5, 5, 5);
+}
+
 void TutorialGame::DrawTextDebugs()
 {
 	if (paused)
 	{
-		Debug::Print("PRESS U TO UNPAUSE", Vector2(35, 50));
+		renderer->DrawString("PRESS U TO UNPAUSE", Vector2(35, 50), Vector4(1, 1, 1, 1), 15.0f);
 	}
 	else if (finished)
 	{
-		Debug::Print("LEVEL COMPLETED", Vector2(35, 40));
-		Debug::Print("TIME TAKEN: " + std::to_string(totalTime), Vector2(30, 45));
+		renderer->DrawString("LEVEL COMPLETED", Vector2(35, 40), Vector4(1, 1, 1, 1), 15.0f);
+		renderer->DrawString("TIME TAKEN: " + std::to_string(totalTime), Vector2(30, 45), Vector4(1, 0.5f, 0.5f, 1), 15.0f);
 	}
 	else
 	{
 		if (displayInfo)
 		{
-			Debug::Print("PRESS F1 TO RESET GAME", Vector2(5, 5));
-			Debug::Print("PRESS F2 TO RESET CAMERA", Vector2(5, 10));
+			renderer->DrawString("PRESS F1 TO RESET GAME", Vector2(5, 5), Vector4(1, 1, 1, 1), 15.0f);
+			renderer->DrawString("PRESS F2 TO RESET CAMERA", Vector2(5, 7.5), Vector4(1, 1, 1, 1), 15.0f);
 		}
-		Debug::Print("PRESS P TO PAUSE", Vector2(5, 90));
-		Debug::Print("TIME TAKEN: " + std::to_string(totalTime), Vector2(35, 7.5));
+		renderer->DrawString("TIME TAKEN: " + std::to_string(totalTime), Vector2(35, 10), Vector4(1, 1, 1, 1), 20.0f);
+		if (playerBall != nullptr)
+		{
+			renderer->DrawString("PLAYER LIVES: " + std::to_string(playerBall->GetLives()) + "    PLAYER BALL CONTROLLABLE: " + ((playerBall->GetPlayerMoveable()) ? "TRUE" : "FALSE"), Vector2(5, 87.5), Vector4(1, 1, 1, 1), 15.0f);
+		}
+		renderer->DrawString("PRESS P TO PAUSE", Vector2(5, 90), Vector4(1, 1, 1, 1), 15.0f);
 
 		if (useGravity) {
-			Debug::Print("(G)ravity on", Vector2(5, 95));
+			renderer->DrawString("(G)ravity on", Vector2(5, 85), Vector4(1, 1, 1, 1), 15.0f);
 		}
 		else {
-			Debug::Print("(G)ravity off", Vector2(5, 95));
+			renderer->DrawString("(G)ravity off", Vector2(5, 85), Vector4(1, 1, 1, 1), 15.0f);
 		}
 	}
 }
@@ -795,32 +814,32 @@ void TutorialGame::AddMazeFloor(const Vector3& centre)
 }
 void TutorialGame::AddMazeWalls(const Vector3& centre)
 {
-	AddWallToWorld(centre + Vector3(-175, 5, -150), Vector3(25, 10, 1));
-	AddWallToWorld(centre + Vector3(-100, 5, -150), Vector3(1, 10, 50));
-	AddWallToWorld(centre + Vector3(-50, 5, -175), Vector3(1, 10, 25));
-	AddWallToWorld(centre + Vector3(0, 5, -125), Vector3(1, 10, 25));
-	AddWallToWorld(centre + Vector3(75, 5, -150), Vector3(25, 10, 1));
-	AddWallToWorld(centre + Vector3(100, 5, -125), Vector3(1, 10, 25));
-	AddWallToWorld(centre + Vector3(-25, 5, -100), Vector3(25, 10, 1));
-	AddWallToWorld(centre + Vector3(125, 5, -100), Vector3(25, 10, 1));
-	AddWallToWorld(centre + Vector3(-150, 5, -50), Vector3(1, 10, 50));
-	AddWallToWorld(centre + Vector3(-100, 5, -50), Vector3(50, 10, 1));
-	AddWallToWorld(centre + Vector3(-50, 5, -25), Vector3(1, 10, 75));
-	AddWallToWorld(centre + Vector3(50, 5, -50), Vector3(50, 10, 1));
-	AddWallToWorld(centre + Vector3(50, 5, -50), Vector3(1, 10, 50));
-	AddWallToWorld(centre + Vector3(175, 5, -50), Vector3(25, 10, 1));
-	AddWallToWorld(centre + Vector3(-150, 5, 50), Vector3(50, 10, 1));
-	AddWallToWorld(centre + Vector3(-100, 5, 50), Vector3(1, 10, 50));
-	AddWallToWorld(centre + Vector3(50, 5, 50), Vector3(100, 10, 1));
-	AddWallToWorld(centre + Vector3(125, 5, 0), Vector3(25, 10, 1));
-	AddWallToWorld(centre + Vector3(100, 5, 75), Vector3(1, 10, 75));
-	AddWallToWorld(centre + Vector3(175, 5, 100), Vector3(25, 10, 1));
-	AddWallToWorld(centre + Vector3(-25, 5, 100), Vector3(25, 10, 1));
-	AddWallToWorld(centre + Vector3(-150, 5, 150), Vector3(1, 10, 50));
-	AddWallToWorld(centre + Vector3(-100, 5, 175), Vector3(1, 10, 25));
-	AddWallToWorld(centre + Vector3(-50, 5, 150), Vector3(1, 10, 50));
-	AddWallToWorld(centre + Vector3(0, 5, 125), Vector3(1, 10, 25));
-	AddWallToWorld(centre + Vector3(50, 5, 150), Vector3(1, 10, 50));
+	AddWallToWorld(centre + Vector3(-175, 5, -150), Vector3(35, 10, 10));
+	AddWallToWorld(centre + Vector3(-100, 5, -150), Vector3(10, 10, 60));
+	AddWallToWorld(centre + Vector3(-50, 5, -175), Vector3(10, 10, 35));
+	AddWallToWorld(centre + Vector3(0, 5, -125), Vector3(10, 10, 35));
+	AddWallToWorld(centre + Vector3(75, 5, -150), Vector3(35, 10, 10));
+	AddWallToWorld(centre + Vector3(100, 5, -125), Vector3(10, 10, 35));
+	AddWallToWorld(centre + Vector3(-25, 5, -100), Vector3(35, 10, 10));
+	AddWallToWorld(centre + Vector3(125, 5, -100), Vector3(35, 10, 10));
+	AddWallToWorld(centre + Vector3(-150, 5, -50), Vector3(10, 10, 60));
+	AddWallToWorld(centre + Vector3(-100, 5, -50), Vector3(60, 10, 10));
+	AddWallToWorld(centre + Vector3(-50, 5, -25), Vector3(10, 10, 85));
+	AddWallToWorld(centre + Vector3(50, 5, -50), Vector3(60, 10, 10));
+	AddWallToWorld(centre + Vector3(50, 5, -50), Vector3(10, 10, 60));
+	AddWallToWorld(centre + Vector3(175, 5, -50), Vector3(35, 10, 10));
+	AddWallToWorld(centre + Vector3(-150, 5, 50), Vector3(60, 10, 10));
+	AddWallToWorld(centre + Vector3(-100, 5, 50), Vector3(10, 10, 60));
+	AddWallToWorld(centre + Vector3(50, 5, 50), Vector3(110, 10, 10));
+	AddWallToWorld(centre + Vector3(125, 5, 0), Vector3(35, 10, 10));
+	AddWallToWorld(centre + Vector3(100, 5, 75), Vector3(10, 10, 85));
+	AddWallToWorld(centre + Vector3(175, 5, 100), Vector3(35, 10, 10));
+	AddWallToWorld(centre + Vector3(-25, 5, 100), Vector3(35, 10, 10));
+	AddWallToWorld(centre + Vector3(-150, 5, 150), Vector3(10, 10, 60));
+	AddWallToWorld(centre + Vector3(-100, 5, 175), Vector3(10, 10, 35));
+	AddWallToWorld(centre + Vector3(-50, 5, 150), Vector3(10, 10, 60));
+	AddWallToWorld(centre + Vector3(0, 5, 125), Vector3(10, 10, 35));
+	AddWallToWorld(centre + Vector3(50, 5, 150), Vector3(10, 10, 60));
 }
 void TutorialGame::AddFunnel(const Vector3& holeCentre, float heightAboveFloor)
 {
@@ -1127,7 +1146,6 @@ void TutorialGame::InitSphereGridWorld(int numRows, int numCols, float rowSpacin
 	}
 	//AddFloorToWorld(Vector3(0, -2, 0), Vector3(200, 2, 200));
 }
-
 void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing) {
 	float sphereRadius = 1.0f;
 	float halfHeight = 2.0f;
@@ -1139,24 +1157,31 @@ void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing
 
 			int randomShape = rand() % 3;
 			if (randomShape == 1) {
-				AddAABBCubeToWorld(2, position, cubeDims);
+				AddAABBCubeToWorld(2, position, cubeDims, 1.0f, true);
 			}
 			else if (randomShape == 2) {
-				AddSphereToWorld(2, position, sphereRadius);
+				AddSphereToWorld(2, position, sphereRadius, 1.0f, true);
 			}
 			else {
 				//AddCapsuleToWorld(2, position, halfHeight, sphereRadius);
-				AddCapsuleToWorld(2, Vector3(position.x, 14.0f, position.z), halfHeight, sphereRadius);
+				AddCapsuleToWorld(2, Vector3(position.x, 14.0f, position.z), halfHeight, sphereRadius, 1.0f, true);
 			}
 		}
 	}
 }
-
 void TutorialGame::InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims) {
 	for (int x = 1; x < numCols+1; ++x) {
 		for (int z = 1; z < numRows+1; ++z) {
 			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
 			AddAABBCubeToWorld(2, position, cubeDims, 1.0f);
+		}
+	}
+}
+void TutorialGame::InitCapsuleGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing) {
+	for (int x = 1; x < numCols+1; ++x) {
+		for (int z = 1; z < numRows+1; ++z) {
+			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
+			AddCapsuleToWorld(2, Vector3(position.x, 14.0f, position.z), 2.0f, 1.0f, 1.0f, true);
 		}
 	}
 }
@@ -1522,7 +1547,7 @@ bool TutorialGame::SelectObject() {
 	if (inSelectionMode) {
 		if (!paused)
 		{
-			renderer->DrawString("Press Q to change to camera mode!", Vector2(5, 85));
+			renderer->DrawString("Press Q to change to camera mode!", Vector2(5, 92.5), Vector4(1, 1, 1, 1), 15.0f);
 		}
 
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
@@ -1568,7 +1593,7 @@ bool TutorialGame::SelectObject() {
 	else {
 		if (!paused)
 		{
-			renderer->DrawString("Press Q to change to select mode!", Vector2(5, 85));
+			renderer->DrawString("Press Q to change to select mode!", Vector2(5, 92.5), Vector4(1, 1, 1, 1), 15.0f);
 		}
 	}
 	
@@ -1576,21 +1601,21 @@ bool TutorialGame::SelectObject() {
 	if (lockedObject) {
 		if (!paused && !finished)
 		{
-			renderer->DrawString("Press L to unlock object!", Vector2(5, 75));
+			renderer->DrawString("Press L to unlock object!", Vector2(5, 82.5), Vector4(1, 1, 1, 1), 15.0f);
 		}
 	}
 
 	else if(selectionObject){
 		if (!paused && displayInfo)
 		{
-			renderer->DrawString("Press L to lock selected object!", Vector2(5, 75));
+			renderer->DrawString("Press L to lock selected object!", Vector2(5, 82.5), Vector4(1, 1, 1, 1), 15.0f);
 
 			string text = selectionObject->GetName();
 			text += ", Centre Pos: (" + std::to_string((int)selectionObject->GetTransform().GetPosition().x) + ',' + std::to_string((int)selectionObject->GetTransform().GetPosition().y) + ',' + std::to_string((int)selectionObject->GetTransform().GetPosition().z) + ')';
-			renderer->DrawString(text, Vector2(5, 65));
+			renderer->DrawString(text, Vector2(5, 72.5));
 			text = "Orientation: (" + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().x) + ',' + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().y) + ',' + std::to_string((int)selectionObject->GetTransform().GetOrientation().ToEuler().z) + ')';
 			text += ", State: " + selectionObject->GetState();
-			renderer->DrawString(text, Vector2(5, 70));
+			renderer->DrawString(text, Vector2(5, 77.5));
 		}
 	}
 
