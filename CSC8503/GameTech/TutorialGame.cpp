@@ -306,22 +306,24 @@ void TutorialGame::LockedObjectMovement() {
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
 		lockedObject->GetPhysicsObject()->AddForce(-rightAxis * force);
 	}
-
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
 		Vector3 worldPos = selectionObject->GetTransform().GetPosition();
 		lockedObject->GetPhysicsObject()->AddForce(rightAxis * force);
 	}
-
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::UP)) {
 		lockedObject->GetPhysicsObject()->AddForce(fwdAxis * force);
 	}
-
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::DOWN)) {
 		lockedObject->GetPhysicsObject()->AddForce(-fwdAxis * force);
 	}
-
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NEXT)) {
 		lockedObject->GetPhysicsObject()->AddForce(Vector3(0,-10,0));
+	}
+	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LSHIFT)) {
+		lockedObject->GetPhysicsObject()->AddForce(Vector3(0, -10, 0));
+	}
+	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::SPACE)) {
+		lockedObject->GetPhysicsObject()->AddForce(Vector3(0, 10, 0));
 	}
 }
 
@@ -354,12 +356,13 @@ void TutorialGame::DebugObjectMovement() {
 		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::DOWN)) {
 			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 10));
 		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM5)) {
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LSHIFT)) {
 			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -10, 0));
 		}
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::SPACE)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 10, 0));
+		}
 	}
-
 }
 
 void TutorialGame::InitCamera() {

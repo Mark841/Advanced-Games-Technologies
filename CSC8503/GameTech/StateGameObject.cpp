@@ -10,7 +10,8 @@ using namespace CSC8503;
 StateGameObject::StateGameObject(ObjectMovement movement, int layer, string name) : GameObject(layer, name)
 {
 	counter = 0.0f;
-	forceMultiplier = 1.0f;
+	forceMultiplier = 1.0f; 
+	wanderDestination = Vector3(-1, -1, -1);
 	switch (movement)
 	{
 	case(ObjectMovement::MOVING):
@@ -176,9 +177,7 @@ void StateGameObject::InitAI()
 			this->SetState(States::WANDERING);
 			if (wanderDestination == Vector3(-1,-1,-1))
 			{
-				int x = ((rand() % 15) + 1) * 25;
-				int z = ((rand() % 15) + 1) * 25;
-				wanderDestination = Vector3(x, 5, z);
+				GenerateNewDestination();
 			}
 			this->Wander(dt);
 		});
@@ -227,7 +226,12 @@ void StateGameObject::InitAI()
 	stateMachine->AddTransition(new StateTransition(huntPlayer, wander, [&](void)->bool
 		{
 			int distToPlayer = DistanceToObject(playerBall);
-			return distToPlayer > 20 || distToPlayer == 0;
+			if (distToPlayer > 20 || distToPlayer == 0)
+			{
+				wanderDestination = Vector3(-1, -1, -1);
+				return true;
+			}
+			return false;
 		}));
 	stateMachine->AddTransition(new StateTransition(wander, huntPlayer, [&](void)->bool
 		{
@@ -371,6 +375,10 @@ void StateGameObject::Wander(float dt)
 {
 	Vector3 startPos = this->GetTransform().GetPosition();
 	bool path = Pathfind(startPos, wanderDestination);
+	if (!path)
+	{
+		GenerateNewDestination();
+	}
 	if (path && nodes.size() > 2)
 	{
 		Vector3 direction = (abs((nodes[1] - startPos).Length() > 5.0f)) ? nodes[1] - startPos : nodes[2] - startPos;
@@ -408,4 +416,10 @@ bool StateGameObject::Pathfind(const Vector3& startPos, const Vector3& endPos)
 		nodes.push_back(pos);
 	}
 	return found;
+}
+void StateGameObject::GenerateNewDestination()
+{
+	int x = ((rand() % 15) + 1) * 25;
+	int z = ((rand() % 15) + 1) * 25;
+	wanderDestination = Vector3(x, 5, z);
 }

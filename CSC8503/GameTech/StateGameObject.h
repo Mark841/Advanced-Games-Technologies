@@ -50,6 +50,7 @@ namespace NCL
 			void Hunt(float dt, int huntingTarget);
 			void Wander(float dt);
 			bool Pathfind(const Vector3& startPos, const Vector3& endPos);
+			void GenerateNewDestination();
 
 			GameObject* collisionWithPlayerBall;
 			GameObject* playerBall;
