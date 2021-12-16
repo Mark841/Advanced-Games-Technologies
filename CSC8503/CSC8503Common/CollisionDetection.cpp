@@ -572,7 +572,6 @@ bool CollisionDetection::OBBCapsuleIntersection(const CapsuleVolume& volumeA, co
 	return false;
 }
 // Sphere / Capsule
-// TO FIX
 bool CollisionDetection::SphereCapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
 	const SphereVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) 
 {
